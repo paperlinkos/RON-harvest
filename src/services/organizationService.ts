@@ -18,13 +18,15 @@ export const DEFAULT_ZONES: Zone[] = [
 ];
 
 export const DEFAULT_GROUPS: Group[] = [
-  { id: 'grp-central', zoneId: 'zone-abuja-1', name: 'Central Group', code: 'CGP', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'grp-east', zoneId: 'zone-abuja-1', name: 'East Group', code: 'EGP', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
+  { id: 'grp-gwarinpa', zoneId: 'zone-abuja-1', name: 'Gwarinpa Group', code: 'GRP-GWARINPA', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'grp-central', zoneId: 'zone-abuja-1', name: 'Central Group', code: 'GRP-CENTRAL', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'grp-wuse', zoneId: 'zone-abuja-1', name: 'Wuse Group', code: 'GRP-WUSE', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
 ];
 
 export const DEFAULT_CHURCHES: Church[] = [
-  { id: 'ch-cathedral', groupId: 'grp-central', name: 'Abuja Cathedral', code: 'ACH', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
-  { id: 'ch-grace', groupId: 'grp-central', name: 'Grace Church', code: 'GCH', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
+  { id: 'ch-gwarinpa1', groupId: 'grp-gwarinpa', name: 'CE Gwarinpa 1', code: 'CH-GWARINPA1', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'ch-cathedral', groupId: 'grp-central', name: 'Abuja Cathedral', code: 'CH-CATHEDRAL', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'ch-wuse', groupId: 'grp-wuse', name: 'CE Wuse', code: 'CH-WUSE1', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
 ];
 
 function getLocalOrgCache(): LocalOrgCache {

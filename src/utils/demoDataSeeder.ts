@@ -6,17 +6,16 @@ import type { Target } from '../types/target';
 export const DEMO_HIERARCHY = {
   zone: { id: 'zone-abuja-1', name: 'Abuja Zone 1', code: 'ABZ1', status: 'active' as const, createdAt: new Date().toISOString() },
   groups: [
-    { id: 'grp-central', zoneId: 'zone-abuja-1', name: 'Central Group', code: 'CGP', status: 'active' as const, createdAt: new Date().toISOString() },
-    { id: 'grp-east', zoneId: 'zone-abuja-1', name: 'East Group', code: 'EGP', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'grp-gwarinpa', zoneId: 'zone-abuja-1', name: 'Gwarinpa Group', code: 'GRP-GWR', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'grp-central', zoneId: 'zone-abuja-1', name: 'Central Group', code: 'GRP-CEN', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'grp-wuse', zoneId: 'zone-abuja-1', name: 'Wuse Group', code: 'GRP-WUS', status: 'active' as const, createdAt: new Date().toISOString() },
   ],
   churches: [
-    { id: 'ch-cathedral', groupId: 'grp-central', name: 'Abuja Cathedral', code: 'ACH', status: 'active' as const, createdAt: new Date().toISOString() },
-    { id: 'ch-grace', groupId: 'grp-central', name: 'Grace Church', code: 'GCH', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'ch-gwarinpa1', groupId: 'grp-gwarinpa', name: 'CE Gwarinpa 1', code: 'CH-GWR1', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'ch-cathedral', groupId: 'grp-central', name: 'Abuja Cathedral', code: 'CH-CATH', status: 'active' as const, createdAt: new Date().toISOString() },
+    { id: 'ch-wuse', groupId: 'grp-wuse', name: 'CE Wuse', code: 'CH-WUS', status: 'active' as const, createdAt: new Date().toISOString() },
   ],
-  pcfs: [
-    { id: 'pcf-alpha', churchId: 'ch-cathedral', name: 'PCF Alpha', code: 'PCFA', status: 'active' as const, createdAt: new Date().toISOString() },
-    { id: 'pcf-beta', churchId: 'ch-cathedral', name: 'PCF Beta', code: 'PCFB', status: 'active' as const, createdAt: new Date().toISOString() },
-  ],
+  pcfs: [],
 };
 
 export async function seedDemoData(): Promise<void> {
@@ -68,18 +67,6 @@ export async function seedDemoData(): Promise<void> {
       updatedBy: 'system',
       status: 'active',
     },
-    {
-      id: `${REACH_OUT_NIGERIA_EVENT.id}_pcf_${DEMO_HIERARCHY.pcfs[0].id}`,
-      eventId: REACH_OUT_NIGERIA_EVENT.id,
-      level: 'pcf',
-      organizationId: DEMO_HIERARCHY.pcfs[0].id,
-      target: 3000,
-      createdAt: now,
-      updatedAt: now,
-      createdBy: 'system',
-      updatedBy: 'system',
-      status: 'active',
-    },
   ];
   localStorage.setItem('ron_cached_targets', JSON.stringify(targets));
 
@@ -93,7 +80,6 @@ export async function seedDemoData(): Promise<void> {
       createdAt: new Date(Date.now() - 3600000).toISOString(),
       clientCreatedAt: new Date(Date.now() - 3600000).toISOString(),
       soulWinnerId: 'demo-soul-winner-id',
-      pcfId: DEMO_HIERARCHY.pcfs[0].id,
       churchId: DEMO_HIERARCHY.churches[0].id,
       groupId: DEMO_HIERARCHY.groups[0].id,
       zoneId: DEMO_HIERARCHY.zone.id,
@@ -109,7 +95,6 @@ export async function seedDemoData(): Promise<void> {
       createdAt: new Date(Date.now() - 7200000).toISOString(),
       clientCreatedAt: new Date(Date.now() - 7200000).toISOString(),
       soulWinnerId: 'demo-soul-winner-id',
-      pcfId: DEMO_HIERARCHY.pcfs[0].id,
       churchId: DEMO_HIERARCHY.churches[0].id,
       groupId: DEMO_HIERARCHY.groups[0].id,
       zoneId: DEMO_HIERARCHY.zone.id,
@@ -125,7 +110,6 @@ export async function seedDemoData(): Promise<void> {
       createdAt: new Date(Date.now() - 10800000).toISOString(),
       clientCreatedAt: new Date(Date.now() - 10800000).toISOString(),
       soulWinnerId: 'demo-soul-winner-id',
-      pcfId: DEMO_HIERARCHY.pcfs[0].id,
       churchId: DEMO_HIERARCHY.churches[0].id,
       groupId: DEMO_HIERARCHY.groups[0].id,
       zoneId: DEMO_HIERARCHY.zone.id,

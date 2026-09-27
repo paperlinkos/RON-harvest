@@ -149,11 +149,11 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
             </div>
             <div className="hierarchy-node">
               <span className="node-label">GROUP:</span>
-              <span className="node-value">{soulWinnerProfile.groupName || soulWinnerProfile.groupId || 'Central Group'}</span>
+              <span className="node-value">{soulWinnerProfile.groupName || soulWinnerProfile.groupId || 'Gwarinpa Group'}</span>
             </div>
             <div className="hierarchy-node node-highlight">
               <span className="node-label">CHURCH:</span>
-              <span className="node-value">{soulWinnerProfile.churchName || soulWinnerProfile.churchId || 'Abuja Cathedral'}</span>
+              <span className="node-value">{soulWinnerProfile.churchName || soulWinnerProfile.churchId || 'CE Gwarinpa 1'}</span>
             </div>
           </div>
         ) : (
