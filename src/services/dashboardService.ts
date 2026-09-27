@@ -60,15 +60,15 @@ export async function getDashboardViewData(
   ]);
 
   // Determine authorized active org
-  let activeLevel: TargetLevel = requestedLevel || (userScope.level === 'soulWinner' ? 'pcf' : userScope.level);
-  let activeOrgId: string = requestedOrgId || userScope.orgId || 'default_zone';
+  let activeLevel: TargetLevel = requestedLevel || (userScope.level === 'soulWinner' ? 'church' : userScope.level);
+  let activeOrgId: string = requestedOrgId || userScope.orgId || 'zone-abuja-1';
 
   // Security Check: If requesting an org outside user scope, fall back to scope org
   if (requestedOrgId && !userScope.isSuperAdmin) {
     const isAuth = isAuthorizedForOrg(userScope, requestedOrgId, activeLevel, groups, churches, pcfs);
     if (!isAuth) {
-      activeLevel = userScope.level === 'soulWinner' ? 'pcf' : userScope.level;
-      activeOrgId = userScope.orgId || 'default_zone';
+      activeLevel = userScope.level === 'soulWinner' ? 'church' : userScope.level;
+      activeOrgId = userScope.orgId || 'zone-abuja-1';
     }
   }
 
@@ -82,14 +82,11 @@ export async function getDashboardViewData(
     const g = groups.find((grp) => grp.id === activeOrgId);
     activeOrgName = g ? g.name : activeOrgId;
     filteredRecords = records.filter((r) => r.groupId === activeOrgId);
-  } else if (activeLevel === 'church') {
+  } else if (activeLevel === 'church' || activeLevel === 'pcf') {
+    activeLevel = 'church';
     const c = churches.find((ch) => ch.id === activeOrgId);
     activeOrgName = c ? c.name : activeOrgId;
     filteredRecords = records.filter((r) => r.churchId === activeOrgId);
-  } else if (activeLevel === 'pcf') {
-    const p = pcfs.find((item) => item.id === activeOrgId);
-    activeOrgName = p ? p.name : activeOrgId;
-    filteredRecords = records.filter((r) => r.pcfId === activeOrgId);
   }
 
   const actual = filteredRecords.length;
@@ -100,7 +97,7 @@ export async function getDashboardViewData(
   );
   
   // Default target fallback if not custom set
-  const defaultTarget = activeLevel === 'zone' ? 40000 : activeLevel === 'group' ? 5000 : activeLevel === 'church' ? 1000 : 200;
+  const defaultTarget = activeLevel === 'zone' ? 40000 : activeLevel === 'group' ? 5000 : 1000;
   const target = targetObj ? targetObj.target : defaultTarget;
 
   const mainProgress = calculateOrganizationProgress({
@@ -147,25 +144,10 @@ export async function getDashboardViewData(
         actual: cRecords.length,
         target: cTargetObj ? cTargetObj.target : 1000,
       });
-      return { ...prog, childCount: pcfs.filter((p) => p.churchId === c.id).length };
+      return { ...prog, childCount: cRecords.length };
     });
   } else if (activeLevel === 'church') {
-    const childPcfs = pcfs.filter((p) => p.churchId === activeOrgId);
-    children = childPcfs.map((p) => {
-      const pRecords = records.filter((r) => r.pcfId === p.id);
-      const pTargetObj = targets.find((t) => t.level === 'pcf' && t.organizationId === p.id);
-      const prog = calculateOrganizationProgress({
-        organizationId: p.id,
-        organizationName: p.name,
-        organizationCode: p.code,
-        level: 'pcf',
-        actual: pRecords.length,
-        target: pTargetObj ? pTargetObj.target : 200,
-      });
-      return { ...prog, childCount: pRecords.length };
-    });
-  } else if (activeLevel === 'pcf') {
-    // For PCF level, aggregate soul counts per Soul Winner
+    // For Church level, aggregate soul counts per Soul Winner
     const winnerMap = new Map<string, { id: string; name: string; count: number }>();
     filteredRecords.forEach((rec) => {
       const swId = rec.soulWinnerId || 'anonymous';

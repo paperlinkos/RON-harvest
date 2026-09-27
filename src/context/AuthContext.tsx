@@ -133,21 +133,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const mockUid = `demo-${targetRole}-uid`;
+    const formattedTitle =
+      targetRole === 'soulWinner' || targetRole === 'pending'
+        ? 'Demo Soul Winner'
+        : targetRole === 'superAdmin'
+        ? 'Super Admin'
+        : targetRole === 'zoneManager'
+        ? 'Abuja Zonal Leader'
+        : targetRole === 'groupManager'
+        ? 'Central Group Leader'
+        : targetRole === 'churchManager'
+        ? 'Abuja Cathedral Pastor'
+        : 'Demo User';
+
     const mockUser = {
       uid: mockUid,
       email: `${targetRole}@ron.org`,
-      displayName: `Demo ${targetRole}`,
+      displayName: formattedTitle,
     } as FirebaseUser;
 
     const nowIso = new Date().toISOString();
-    const actualRole: UserRole = targetRole === 'pending' ? 'soulWinner' : targetRole;
+    const actualRole: UserRole = targetRole === 'pending' ? 'soulWinner' : (targetRole as UserRole);
     const actualStatus: AccountStatus = targetRole === 'pending' ? 'pendingAssignment' : 'active';
 
     const uProf: UserProfile = {
       id: mockUid,
-      name: `Demo ${targetRole}`,
+      name: formattedTitle,
       email: `${targetRole}@ron.org`,
-      phone: '+234800000000',
+      phone: '+234 800 000 0000',
       role: actualRole,
       status: actualStatus,
       createdAt: nowIso,
@@ -159,12 +172,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userId: mockUid,
       zoneId: 'zone-abuja-1',
       zoneName: 'Abuja Zone 1',
-      groupId: targetRole === 'groupManager' || targetRole === 'churchManager' || targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'grp-central' : undefined,
-      groupName: targetRole === 'groupManager' || targetRole === 'churchManager' || targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'Central Group' : undefined,
-      churchId: targetRole === 'churchManager' || targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'ch-cathedral' : undefined,
-      churchName: targetRole === 'churchManager' || targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'Abuja Cathedral' : undefined,
-      pcfId: targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'pcf-alpha' : undefined,
-      pcfName: targetRole === 'pcfLeader' || targetRole === 'soulWinner' ? 'PCF Alpha' : undefined,
+      groupId: targetRole === 'groupManager' || targetRole === 'churchManager' || targetRole === 'soulWinner' || targetRole === 'pending' ? 'grp-central' : undefined,
+      groupName: targetRole === 'groupManager' || targetRole === 'churchManager' || targetRole === 'soulWinner' || targetRole === 'pending' ? 'Central Group' : undefined,
+      churchId: targetRole === 'churchManager' || targetRole === 'soulWinner' || targetRole === 'pending' ? 'ch-cathedral' : undefined,
+      churchName: targetRole === 'churchManager' || targetRole === 'soulWinner' || targetRole === 'pending' ? 'Abuja Cathedral' : undefined,
       status: actualStatus,
       createdAt: nowIso,
       updatedAt: nowIso,

@@ -168,21 +168,6 @@ export const DevRoleSwitcher: React.FC = () => {
               ⛪ Church Manager
             </button>
             <button
-              onClick={() => handleRoleSelect('pcfLeader')}
-              style={{
-                padding: '8px',
-                borderRadius: '8px',
-                border: '1px solid #1e3a2f',
-                background: role === 'pcfLeader' ? '#008751' : '#142920',
-                color: '#fff',
-                fontSize: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              👥 PCF Leader
-            </button>
-            <button
               onClick={() => handleRoleSelect('soulWinner')}
               style={{
                 padding: '8px',

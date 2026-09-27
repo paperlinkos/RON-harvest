@@ -103,7 +103,7 @@ export const RoleDashboardView: React.FC<RoleDashboardViewProps> = ({ onNavigate
           <div className="dashboard-hero-header">
             <h2 className="dashboard-org-title">{myContribution.name}</h2>
             <p className="dashboard-org-subtitle">
-              Connected PCF: {soulWinnerProfile?.pcfName || 'Assigned PCF'}
+              Connected Church: {soulWinnerProfile?.churchName || 'Abuja Cathedral'}
             </p>
           </div>
 
@@ -232,21 +232,19 @@ export const RoleDashboardView: React.FC<RoleDashboardViewProps> = ({ onNavigate
               ? 'GROUPS UNDER ZONE'
               : data.activeLevel === 'group'
               ? 'CHURCHES UNDER GROUP'
-              : data.activeLevel === 'church'
-              ? 'PCFS UNDER CHURCH'
-              : 'SOUL WINNERS IN PCF'}
+              : 'SOUL WINNERS IN CHURCH'}
           </h3>
           <span className="text-muted text-sm">
-            {data.activeLevel === 'pcf' ? `${data.soulWinners?.length || 0} Soul Winners` : `${data.children.length} Entities`}
+            {data.activeLevel === 'church' ? `${data.soulWinners?.length || 0} Soul Winners` : `${data.children.length} Entities`}
           </span>
         </div>
 
         {/* Children Rows */}
-        {data.activeLevel === 'pcf' ? (
+        {data.activeLevel === 'church' ? (
           <div className="soul-winners-grid">
             {data.soulWinners?.length === 0 ? (
               <p className="text-muted text-center" style={{ padding: '20px' }}>
-                No Soul Winner submissions recorded under this PCF yet.
+                No Soul Winner submissions recorded under this Church yet.
               </p>
             ) : (
               data.soulWinners?.map((sw, idx) => (

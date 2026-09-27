@@ -141,35 +141,31 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
           Organizational Assignment
         </h4>
 
-        {soulWinnerProfile?.pcfId ? (
+        {soulWinnerProfile?.churchId || soulWinnerProfile?.zoneId ? (
           <div className="hierarchy-tree">
             <div className="hierarchy-node">
               <span className="node-label">ZONE:</span>
-              <span className="node-value">{soulWinnerProfile.zoneName || soulWinnerProfile.zoneId}</span>
+              <span className="node-value">{soulWinnerProfile.zoneName || soulWinnerProfile.zoneId || 'Abuja Zone 1'}</span>
             </div>
             <div className="hierarchy-node">
               <span className="node-label">GROUP:</span>
-              <span className="node-value">{soulWinnerProfile.groupName || soulWinnerProfile.groupId}</span>
-            </div>
-            <div className="hierarchy-node">
-              <span className="node-label">CHURCH:</span>
-              <span className="node-value">{soulWinnerProfile.churchName || soulWinnerProfile.churchId}</span>
+              <span className="node-value">{soulWinnerProfile.groupName || soulWinnerProfile.groupId || 'Central Group'}</span>
             </div>
             <div className="hierarchy-node node-highlight">
-              <span className="node-label">PCF:</span>
-              <span className="node-value">{soulWinnerProfile.pcfName || soulWinnerProfile.pcfId}</span>
+              <span className="node-label">CHURCH:</span>
+              <span className="node-value">{soulWinnerProfile.churchName || soulWinnerProfile.churchId || 'Abuja Cathedral'}</span>
             </div>
           </div>
         ) : (
           <div className="hierarchy-unassigned">
-            <p>No PCF assigned yet.</p>
+            <p>No Church assigned yet.</p>
             <button
               onClick={handleAssignTestHierarchy}
               disabled={isAssigningTest}
               className="dev-assign-button"
             >
               <Wrench size={14} />
-              <span>{isAssigningTest ? 'Assigning...' : 'Assign Test PCF (Dev Helper)'}</span>
+              <span>{isAssigningTest ? 'Assigning...' : 'Assign Test Church (Dev Helper)'}</span>
             </button>
           </div>
         )}

@@ -13,12 +13,46 @@ interface LocalOrgCache {
   pcfs: PCF[];
 }
 
+export const DEFAULT_ZONES: Zone[] = [
+  { id: 'zone-abuja-1', name: 'Abuja Zone 1', code: 'ABZ1', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
+];
+
+export const DEFAULT_GROUPS: Group[] = [
+  { id: 'grp-central', zoneId: 'zone-abuja-1', name: 'Central Group', code: 'CGP', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'grp-east', zoneId: 'zone-abuja-1', name: 'East Group', code: 'EGP', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
+];
+
+export const DEFAULT_CHURCHES: Church[] = [
+  { id: 'ch-cathedral', groupId: 'grp-central', name: 'Abuja Cathedral', code: 'ACH', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'ch-grace', groupId: 'grp-central', name: 'Grace Church', code: 'GCH', status: 'active', createdAt: '2026-01-01T00:00:00.000Z' }
+];
+
 function getLocalOrgCache(): LocalOrgCache {
   try {
     const raw = localStorage.getItem(ORG_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { zones: [], groups: [], churches: [], pcfs: [] };
+    if (!raw) {
+      const initial: LocalOrgCache = {
+        zones: DEFAULT_ZONES,
+        groups: DEFAULT_GROUPS,
+        churches: DEFAULT_CHURCHES,
+        pcfs: [],
+      };
+      saveLocalOrgCache(initial);
+      return initial;
+    }
+    const parsed: LocalOrgCache = JSON.parse(raw);
+    if (!parsed.zones || parsed.zones.length === 0) parsed.zones = DEFAULT_ZONES;
+    if (!parsed.groups || parsed.groups.length === 0) parsed.groups = DEFAULT_GROUPS;
+    if (!parsed.churches || parsed.churches.length === 0) parsed.churches = DEFAULT_CHURCHES;
+    if (!parsed.pcfs) parsed.pcfs = [];
+    return parsed;
   } catch {
-    return { zones: [], groups: [], churches: [], pcfs: [] };
+    return {
+      zones: DEFAULT_ZONES,
+      groups: DEFAULT_GROUPS,
+      churches: DEFAULT_CHURCHES,
+      pcfs: [],
+    };
   }
 }
 
