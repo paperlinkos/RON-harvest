@@ -114,7 +114,7 @@ export const UpwardRaceView: React.FC = () => {
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 type="text"
-                placeholder="Search church or group..."
+                placeholder="Search by church name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -165,14 +165,12 @@ export const UpwardRaceView: React.FC = () => {
           (() => {
             const query = searchQuery.trim().toLowerCase();
 
-            // Filter groups or groups containing matching churches
+            // Filter groups containing churches matching church name/code
             const filteredCompetitors = competitors.filter((comp) => {
               if (!query) return true;
-              const matchesGroup = comp.name.toLowerCase().includes(query) || (comp.code && comp.code.toLowerCase().includes(query));
-              const matchesChurch = comp.churches?.some(
+              return comp.churches?.some(
                 (c) => c.name.toLowerCase().includes(query) || (c.code && c.code.toLowerCase().includes(query))
               );
-              return matchesGroup || matchesChurch;
             });
 
             if (filteredCompetitors.length === 0) {
@@ -180,7 +178,7 @@ export const UpwardRaceView: React.FC = () => {
                 <div className="race-empty-box">
                   <span className="race-empty-badge">NO MATCHES FOUND</span>
                   <p className="race-empty-text">
-                    No groups or churches found matching "{searchQuery}".
+                    No churches found matching "{searchQuery}".
                   </p>
                 </div>
               );
@@ -206,12 +204,9 @@ export const UpwardRaceView: React.FC = () => {
                   const isExpanded = !!expandedGroupIds[comp.id] || !!hasMatchingChurch;
                   const churchesCount = comp.churches ? comp.churches.length : 0;
 
-                  // Filter churches list if query matches specific churches
+                  // Filter churches list strictly by church name/code
                   const filteredChurches = comp.churches?.filter((c) => {
                     if (!query) return true;
-                    // If group name matched, show all churches; otherwise filter churches
-                    const matchesGroup = comp.name.toLowerCase().includes(query) || (comp.code && comp.code.toLowerCase().includes(query));
-                    if (matchesGroup) return true;
                     return c.name.toLowerCase().includes(query) || (c.code && c.code.toLowerCase().includes(query));
                   });
 

@@ -336,7 +336,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                     <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
                     <input
                       type="text"
-                      placeholder="Search church or group..."
+                      placeholder="Search by church name..."
                       value={churchSearchQuery}
                       onChange={(e) => setChurchSearchQuery(e.target.value)}
                       style={{
@@ -380,8 +380,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                       const q = churchSearchQuery.toLowerCase().trim();
                       return (
                         c.name.toLowerCase().includes(q) ||
-                        c.code.toLowerCase().includes(q) ||
-                        c.groupName.toLowerCase().includes(q)
+                        (c.code && c.code.toLowerCase().includes(q))
                       );
                     }).length} OF {churchStandings.length} CHURCHES
                   </span>
@@ -399,8 +398,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                     const q = churchSearchQuery.toLowerCase().trim();
                     return (
                       c.name.toLowerCase().includes(q) ||
-                      c.code.toLowerCase().includes(q) ||
-                      c.groupName.toLowerCase().includes(q)
+                      (c.code && c.code.toLowerCase().includes(q))
                     );
                   });
 
