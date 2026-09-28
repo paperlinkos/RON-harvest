@@ -7,26 +7,123 @@ interface UpwardRaceVisualizationProps {
   variant?: 'classic' | 'barChart';
 }
 
+/** Returns exact color config based on percentage rules: <50% Red, 50-74% Yellow, >=75% Bright Green */
+export function getBarColorConfig(percentage: number) {
+  if (percentage < 50) {
+    return {
+      // RED (< 50%)
+      background: 'linear-gradient(180deg, #ff453a 0%, #b30000 100%)',
+      glow: '0 0 12px rgba(255, 69, 58, 0.7), inset 0 2px 4px rgba(255,255,255,0.7)',
+      textColor: '#ff453a',
+      badgeBg: 'rgba(255, 69, 58, 0.15)',
+      badgeBorder: 'rgba(255, 69, 58, 0.3)',
+      tierName: 'BELOW 50%',
+    };
+  } else if (percentage < 75) {
+    return {
+      // YELLOW (50% - 74%)
+      background: 'linear-gradient(180deg, #ffcc00 0%, #b38f00 100%)',
+      glow: '0 0 12px rgba(255, 204, 0, 0.75), inset 0 2px 4px rgba(255,255,255,0.7)',
+      textColor: '#ffd60a',
+      badgeBg: 'rgba(255, 204, 0, 0.15)',
+      badgeBorder: 'rgba(255, 204, 0, 0.3)',
+      tierName: '50% - 74%',
+    };
+  } else {
+    return {
+      // BRIGHT GREEN (>= 75%)
+      background: 'linear-gradient(180deg, #00ff87 0%, #00994d 100%)',
+      glow: '0 0 14px rgba(0, 255, 135, 0.8), inset 0 2px 4px rgba(255,255,255,0.7)',
+      textColor: '#00ff87',
+      badgeBg: 'rgba(0, 255, 135, 0.15)',
+      badgeBorder: 'rgba(0, 255, 135, 0.3)',
+      tierName: '75%+',
+    };
+  }
+}
+
 export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = ({
   competitors,
   variant = 'classic',
 }) => {
   if (variant === 'barChart') {
+    // Check if total actual souls won is 0. If so, simulate top 3 groups across the 3 color tiers for visual demonstration
+    const hasRealActivity = competitors.some((c) => c.soulsWon > 0);
+
+    const displayCompetitors = competitors.map((comp, idx) => {
+      if (!hasRealActivity) {
+        // Simulation demo values:
+        // Group #1 -> 85% (Bright Green)
+        // Group #2 -> 60% (Yellow)
+        // Group #3 -> 25% (Red)
+        // Rest -> 10% or less (Red)
+        let simPercentage = 0;
+        let simSoulsWon = 0;
+        const target = comp.target > 0 ? comp.target : 1000;
+
+        if (idx === 0) {
+          simPercentage = 85;
+          simSoulsWon = Math.round(target * 0.85);
+        } else if (idx === 1) {
+          simPercentage = 60;
+          simSoulsWon = Math.round(target * 0.60);
+        } else if (idx === 2) {
+          simPercentage = 25;
+          simSoulsWon = Math.round(target * 0.25);
+        } else {
+          simPercentage = Math.max(0, 20 - idx * 2);
+          simSoulsWon = Math.round(target * (simPercentage / 100));
+        }
+
+        return {
+          ...comp,
+          percentage: simPercentage,
+          soulsWon: simSoulsWon,
+          target,
+          displayPercentage: `${simPercentage}%`,
+          normalizedProgress: simPercentage / 100,
+          isSimulated: true,
+        };
+      }
+
+      return {
+        ...comp,
+        isSimulated: false,
+      };
+    });
+
     return (
       <div className="race-container bar-chart-variant">
-        <div className="race-header">
+        <div className="race-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
           <div className="race-title-group">
-            <BarChart2 size={20} className="text-green-accent" />
-            <h3 className="race-title" style={{ color: '#ffffff', fontWeight: '900' }}>
-              GROUP PERFORMANCE BAR CHART
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BarChart2 size={20} className="text-green-accent" />
+              <h3 className="race-title" style={{ color: '#ffffff', fontWeight: '900', margin: 0 }}>
+                GROUP PERFORMANCE BAR CHART
+              </h3>
+            </div>
+            <p className="race-subtitle" style={{ color: '#94a3b8', marginTop: '4px' }}>
+              Real-time vertical bar representation. Colors reflect target thresholds: <span style={{ color: '#ff453a', fontWeight: '800' }}>&lt;50% Red</span> • <span style={{ color: '#ffd60a', fontWeight: '800' }}>50–74% Yellow</span> • <span style={{ color: '#00ff87', fontWeight: '800' }}>75%+ Bright Green</span>.
+            </p>
           </div>
-          <p className="race-subtitle" style={{ color: '#94a3b8' }}>
-            Real-time vertical bar chart showing all {competitors.length} Groups climbing toward their 100% target finish line.
-          </p>
+
+          {/* Color Threshold Legend */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.74rem' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ff453a', fontWeight: '800' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff453a' }} /> &lt;50% Red
+            </span>
+            <span style={{ color: '#64748b' }}>|</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ffd60a', fontWeight: '800' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffd60a' }} /> 50-74% Yellow
+            </span>
+            <span style={{ color: '#64748b' }}>|</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#00ff87', fontWeight: '800' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ff87' }} /> 75%+ Green
+            </span>
+          </div>
         </div>
 
-        {competitors.length === 0 ? (
+        {displayCompetitors.length === 0 ? (
           <div className="race-empty-box">
             <span className="race-empty-badge">THE RACE IS BEGINNING</span>
             <p className="race-empty-text">
@@ -43,21 +140,26 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 alignItems: 'center',
                 gap: '8px',
                 paddingBottom: '8px',
-                borderBottom: '2px dashed #00e676',
+                borderBottom: '2px dashed #00ff87',
                 marginBottom: '16px',
               }}
             >
-              <Flag size={14} style={{ color: '#00e676' }} />
-              <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#00e676', letterSpacing: '0.05em' }}>
+              <Flag size={14} style={{ color: '#00ff87' }} />
+              <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#00ff87', letterSpacing: '0.05em' }}>
                 FINISH LINE • 100% TARGET GOAL
               </span>
+              {!hasRealActivity && (
+                <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255, 215, 0, 0.15)', color: '#FFD700', border: '1px solid rgba(255, 215, 0, 0.3)', marginLeft: 'auto' }}>
+                  SIMULATION DEMO MODE
+                </span>
+              )}
             </div>
 
             {/* Grid Chart Columns Area for ALL Groups */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: `repeat(${competitors.length}, minmax(42px, 1fr))`,
+                gridTemplateColumns: `repeat(${displayCompetitors.length}, minmax(42px, 1fr))`,
                 gap: '6px',
                 alignItems: 'flex-end',
                 minHeight: '260px',
@@ -65,12 +167,14 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 width: '100%',
               }}
             >
-              {competitors.map((comp, idx) => {
+              {displayCompetitors.map((comp, idx) => {
                 const heightPct = Math.max(
-                  4,
+                  5,
                   Math.min(100, (comp.normalizedProgress ?? comp.percentage / 100) * 100)
                 );
                 const displayPct = comp.displayPercentage || `${comp.percentage}%`;
+                const colorConfig = getBarColorConfig(comp.percentage);
+
                 const rankColor =
                   idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#94a3b8';
 
@@ -85,7 +189,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                       justify: 'flex-end',
                       gap: '8px',
                     }}
-                    title={`${comp.name} (${comp.code || 'No Code'}): ${comp.soulsWon.toLocaleString()} / ${comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls (${displayPct})`}
+                    title={`${comp.name} (${comp.code || 'No Code'}): ${comp.soulsWon.toLocaleString()} / ${comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls (${displayPct}) - ${colorConfig.tierName}`}
                   >
                     {/* Vertical Bar Track Column */}
                     <div
@@ -103,16 +207,15 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
                       }}
                     >
+                      {/* Entire Bar Filled with Threshold Color */}
                       <div
                         style={{
                           width: '100%',
                           height: `${heightPct}%`,
-                          background: comp.isTargetExceeded
-                            ? 'linear-gradient(180deg, #FFD700 0%, #008751 100%)'
-                            : 'linear-gradient(180deg, #50f28e 0%, #008751 100%)',
+                          background: colorConfig.background,
                           borderRadius: '3px 3px 0 0',
-                          transition: 'height 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: '0 0 10px rgba(80, 242, 142, 0.5), inset 0 2px 4px rgba(255,255,255,0.7)',
+                          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: colorConfig.glow,
                           borderTop: '2px solid #ffffff',
                         }}
                       />
@@ -151,12 +254,12 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         {comp.code ? comp.code.replace(/^GRP-/, '') : comp.name}
                       </span>
 
-                      {/* Percentage Pill */}
+                      {/* Percentage Pill in Threshold Color */}
                       <span
                         style={{
                           fontSize: '0.72rem',
                           fontWeight: '900',
-                          color: comp.isTargetExceeded ? '#FFD700' : '#00e676',
+                          color: colorConfig.textColor,
                           lineHeight: '1',
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -164,7 +267,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         }}
                       >
                         {displayPct}
-                        {comp.isTargetExceeded && <Sparkles size={8} style={{ color: '#FFD700' }} />}
+                        {comp.percentage >= 100 && <Sparkles size={8} style={{ color: '#FFD700' }} />}
                       </span>
 
                       {/* Souls Count Readout */}
@@ -268,4 +371,5 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
     </div>
   );
 };
+
 
