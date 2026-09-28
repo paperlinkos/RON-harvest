@@ -40,8 +40,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
         {/* TOP BAR / CONTROL BUTTONS */}
         <div className="big-screen-header">
           <div className="big-screen-brand">
-            <Sparkles size={20} className="text-green-accent" />
-            <span className="big-screen-brand-title">REACH OUT NIGERIA • LIVE CAMPAIGN DISPLAY</span>
+            <span className="big-screen-brand-title">CEAZ1 REACHOUT NIGERIA • LIVE CAMPAIGN DISPLAY</span>
           </div>
 
           <button
@@ -57,8 +56,8 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
         {/* HERO CONTENT AREA */}
         <div className="big-screen-hero">
-          <h1 className="big-screen-title">REACH OUT NIGERIA</h1>
-          <div className="big-screen-subtitle">ZONAL SOUL WINNING CAMPAIGN</div>
+          <h1 className="big-screen-title">CEAZ1 REACHOUT NIGERIA</h1>
+          <div className="big-screen-subtitle">SOUL WINNING CAMPAIGN</div>
 
           {/* STATUS BADGE */}
           <div className="big-screen-status-row">
