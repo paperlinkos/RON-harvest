@@ -382,6 +382,8 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
                 disabled={isSubmitting}
                 style={{ width: '18px', height: '18px', accentColor: '#FFD700', cursor: 'pointer' }}
               />
+              <span>🔥 Filled with The Spirit</span>
+            </label>
           </div>
         </div>
 
