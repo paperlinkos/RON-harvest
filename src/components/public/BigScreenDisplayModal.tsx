@@ -108,9 +108,9 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
           </div>
         </div>
 
-        {/* UPWARD RACE VISUALIZATION */}
+        {/* UPWARD RACE BAR CHART VISUALIZATION (PROJECTOR / BIG SCREEN VIEW) */}
         <div className="big-screen-race-section">
-          <UpwardRaceVisualization competitors={counterData.groupCompetitors} />
+          <UpwardRaceVisualization competitors={counterData.groupCompetitors} variant="barChart" />
         </div>
       </div>
     </div>
