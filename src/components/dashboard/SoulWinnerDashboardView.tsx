@@ -7,7 +7,6 @@ import {
   Building2,
   ArrowRight,
   TrendingUp,
-  Award,
   CheckCircle2,
   Clock,
   Search,
@@ -74,61 +73,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
 
   const churchContribPct = churchRecordsCount > 0 ? ((mySoulsCount / churchRecordsCount) * 100).toFixed(1) : '0.0';
   const groupContribPct = groupRecordsCount > 0 ? ((mySoulsCount / groupRecordsCount) * 100).toFixed(1) : '0.0';
-
-  // Badges calculation
-  const badges = [
-    {
-      id: 'badge-starter',
-      title: 'Soul Starter',
-      desc: 'Recorded 1+ Souls Won',
-      icon: '🌱',
-      unlocked: mySoulsCount >= 1,
-    },
-    {
-      id: 'badge-warrior',
-      title: 'Harvest Warrior',
-      desc: 'Recorded 5+ Souls Won',
-      icon: '⚔️',
-      unlocked: mySoulsCount >= 5,
-    },
-    {
-      id: 'badge-bearer',
-      title: 'Flame Bearer',
-      desc: 'Recorded 10+ Souls Won',
-      icon: '🔥',
-      unlocked: mySoulsCount >= 10,
-    },
-    {
-      id: 'badge-pillar',
-      title: 'Kingdom Pillar',
-      desc: 'Recorded 25+ Souls Won',
-      icon: '🏆',
-      unlocked: mySoulsCount >= 25,
-    },
-    {
-      id: 'badge-legend',
-      title: 'Legendary Winner',
-      desc: 'Recorded 50+ Souls Won',
-      icon: '👑',
-      unlocked: mySoulsCount >= 50,
-    },
-    {
-      id: 'badge-church-pillar',
-      title: 'Church Pillar',
-      desc: 'Contributed 10%+ to Church',
-      icon: '⛪',
-      unlocked: parseFloat(churchContribPct) >= 10.0 && mySoulsCount >= 1,
-    },
-    {
-      id: 'badge-group-pace',
-      title: 'Group Pace Setter',
-      desc: 'Contributed 5%+ to Group',
-      icon: '🏢',
-      unlocked: parseFloat(groupContribPct) >= 5.0 && mySoulsCount >= 1,
-    },
-  ];
-
-  const unlockedCount = badges.filter((b) => b.unlocked).length;
 
   const filteredMyRecords = myRecords.filter(
     (r) =>
@@ -218,27 +162,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
         </div>
       </div>
 
-        {/* Card 4: Achievement Badges */}
-        <div
-          style={{
-            background: 'rgba(13, 31, 24, 0.8)',
-            border: '1px solid rgba(0, 135, 81, 0.5)',
-            borderRadius: '14px',
-            padding: '18px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            <Award size={16} color="#a855f7" />
-            <span>BADGES UNLOCKED</span>
-          </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#c084fc', margin: '6px 0' }}>
-            {unlockedCount} / {badges.length}
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            {unlockedCount > 0 ? 'Keep winning souls to earn more!' : 'Record your first soul to unlock!'}
-          </div>
-        </div>
-
       {/* PROGRESS BARS COMPARISON */}
       <div className="account-card" style={{ marginBottom: '24px' }}>
         <h3 className="form-title" style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -301,40 +224,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
               }}
             />
           </div>
-        </div>
-      </div>
-
-      {/* MILESTONE & ACHIEVEMENT BADGES GRID */}
-      <div className="account-card" style={{ marginBottom: '24px' }}>
-        <h3 className="form-title" style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Award size={18} color="#FFD700" />
-          <span>ACHIEVEMENT & RECOGNITION BADGES</span>
-        </h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-          {badges.map((b) => (
-            <div
-              key={b.id}
-              style={{
-                background: b.unlocked ? 'rgba(0, 135, 81, 0.2)' : 'rgba(255, 255, 255, 0.02)',
-                border: b.unlocked ? '1px solid #008751' : '1px solid #1e3a2f',
-                borderRadius: '12px',
-                padding: '14px',
-                textAlign: 'center',
-                opacity: b.unlocked ? 1 : 0.45,
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <div style={{ fontSize: '2rem', marginBottom: '6px' }}>{b.icon}</div>
-              <div style={{ fontWeight: 'bold', fontSize: '0.88rem', color: b.unlocked ? '#FFD700' : '#94a3b8' }}>
-                {b.title}
-              </div>
-              <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '4px' }}>{b.desc}</div>
-              <div style={{ marginTop: '8px', fontSize: '0.7rem', fontWeight: 'bold', color: b.unlocked ? '#4ade80' : '#64748b' }}>
-                {b.unlocked ? '✓ UNLOCKED' : '🔒 LOCKED'}
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
