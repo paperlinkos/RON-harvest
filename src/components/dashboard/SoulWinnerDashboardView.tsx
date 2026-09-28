@@ -11,6 +11,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useEventConfig } from '../../hooks/useEventConfig';
 import { getAllLocalRecords } from '../../services/indexedDbService';
 import { subscribeToSyncStatus } from '../../services/syncService';
 import type { SoulWinningRecord } from '../../types/record';
@@ -21,8 +22,10 @@ interface SoulWinnerDashboardViewProps {
 
 export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = ({ onNavigateTab }) => {
   const { userProfile, soulWinnerProfile } = useAuth();
+  const { eventConfig } = useEventConfig();
 
   const [myRecords, setMyRecords] = useState<SoulWinningRecord[]>([]);
+
   const [churchRecordsCount, setChurchRecordsCount] = useState<number>(0);
   const [groupRecordsCount, setGroupRecordsCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -61,7 +64,7 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
   }, [userProfile, soulWinnerProfile]);
 
   const mySoulsCount = myRecords.length;
-  const personalTarget = 20; // Personal target default
+  const personalTarget = eventConfig?.personalTargetDefault ?? 20;
   const personalPct = Math.min(100, Math.round((mySoulsCount / personalTarget) * 100));
 
   const churchContribPct = churchRecordsCount > 0 ? ((mySoulsCount / churchRecordsCount) * 100).toFixed(1) : '0.0';

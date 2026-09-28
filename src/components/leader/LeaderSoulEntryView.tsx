@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSoulRecords } from '../../hooks/useSoulRecords';
+import { useEventConfig } from '../../hooks/useEventConfig';
+import { DEFAULT_LOCATION_PRESETS } from '../../config/eventConfig';
 import { DEFAULT_GROUPS, DEFAULT_CHURCHES } from '../../services/organizationService';
 import { saveLocalRecord } from '../../services/indexedDbService';
 import { syncPendingRecords, notifyRecordChanges } from '../../services/syncService';
@@ -40,6 +42,11 @@ interface ParsedSoulRow {
 
 export const LeaderSoulEntryView: React.FC = () => {
   const { userProfile, soulWinnerProfile, role } = useAuth();
+  const { eventConfig } = useEventConfig();
+  const locationPresets =
+    eventConfig.locationPresets && eventConfig.locationPresets.length > 0
+      ? eventConfig.locationPresets
+      : DEFAULT_LOCATION_PRESETS;
   const { records } = useSoulRecords();
 
   const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'history'>('single');
@@ -587,7 +594,31 @@ export const LeaderSoulEntryView: React.FC = () => {
                   className="form-input"
                 />
               </div>
+
+              {/* QUICK LOCATION PRESET PILLS */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                {locationPresets.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setSingleLocation(preset)}
+                    style={{
+                      background: singleLocation === preset ? 'rgba(0, 255, 135, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                      border: singleLocation === preset ? '1px solid #00ff87' : '1px solid rgba(255, 255, 255, 0.12)',
+                      color: singleLocation === preset ? '#00ff87' : '#cbd5e1',
+                      padding: '4px 10px',
+                      borderRadius: '16px',
+                      fontSize: '0.72rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
             </div>
+
 
             {/* SPIRITUAL STATUS */}
             <div className="form-group">

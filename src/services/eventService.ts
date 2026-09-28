@@ -179,3 +179,69 @@ export async function getEventAuditLogs(eventId: string = DEFAULT_EVENT_CONFIG.i
     return [];
   }
 }
+
+/** SuperAdmin function to update campaign settings, targets, thresholds, presets, and milestones */
+export async function updateEventConfig(
+  eventId: string,
+  partialUpdates: Partial<EventConfig>,
+  actorId: string = 'superAdmin'
+): Promise<{ success: boolean; config?: EventConfig; error?: string }> {
+  try {
+    const nowIso = new Date().toISOString();
+    const docRef = doc(db, 'events', eventId);
+    const snap = await getDoc(docRef);
+
+    const currentConfig: EventConfig = snap.exists()
+      ? (snap.data() as EventConfig)
+      : { ...DEFAULT_EVENT_CONFIG };
+
+    const updates: Partial<EventConfig> = {
+      ...partialUpdates,
+      updatedAt: nowIso,
+    };
+
+    if (snap.exists()) {
+      await updateDoc(docRef, updates);
+    } else {
+      await setDoc(docRef, { ...currentConfig, ...updates });
+    }
+
+    const updatedConfig: EventConfig = {
+      ...currentConfig,
+      ...updates,
+    };
+
+    setLocalEventConfig(updatedConfig);
+
+    // Write audit log
+    const auditLogId = generateUUID();
+    const auditEntry: EventAuditLog = {
+      id: auditLogId,
+      eventId,
+      action: 'settings_updated',
+      actorId,
+      timestamp: nowIso,
+      details: Object.keys(partialUpdates).join(', '),
+    };
+    try {
+      const auditRef = doc(db, 'eventAuditLogs', auditLogId);
+      await setDoc(auditRef, auditEntry);
+    } catch (auditErr) {
+      console.warn('Could not write settings audit log:', auditErr);
+    }
+
+    return { success: true, config: updatedConfig };
+  } catch (err: unknown) {
+    console.error('Error updating event config:', err);
+    // Maintain offline resiliency
+    const current = getLocalEventConfig();
+    const fallbackConfig: EventConfig = {
+      ...current,
+      ...partialUpdates,
+      updatedAt: new Date().toISOString(),
+    };
+    setLocalEventConfig(fallbackConfig);
+    return { success: true, config: fallbackConfig };
+  }
+}
+

@@ -3,7 +3,8 @@ import { User, Phone, MapPin, Send, CheckCircle2, History, Lock } from 'lucide-r
 import type { FormSubmissionData } from '../types/record';
 import type { SubmissionResult } from '../hooks/useSoulRecords';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import type { EventStatus } from '../config/eventConfig';
+import { useEventConfig } from '../hooks/useEventConfig';
+import { DEFAULT_LOCATION_PRESETS, type EventStatus } from '../config/eventConfig';
 import { checkSingleRecordDuplicate } from '../services/duplicateDetectionService';
 
 interface SoulRecordFormProps {
@@ -14,16 +15,6 @@ interface SoulRecordFormProps {
   eventStatus?: EventStatus;
 }
 
-const LOCATION_PRESETS = [
-  'Wuse Market',
-  'Gwarinpa',
-  'Church',
-  'Street outreach',
-  'University',
-  'Workplace',
-  'Personal contact',
-];
-
 export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
   onSubmit,
   isSubmitting,
@@ -32,6 +23,12 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
   eventStatus = 'live',
 }) => {
   const { isOnline } = useNetworkStatus();
+  const { eventConfig } = useEventConfig();
+  const locationPresets =
+    eventConfig.locationPresets && eventConfig.locationPresets.length > 0
+      ? eventConfig.locationPresets
+      : DEFAULT_LOCATION_PRESETS;
+
 
   const [formData, setFormData] = useState<FormSubmissionData>({
     name: '',
@@ -306,7 +303,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
           <div className="location-presets-bar">
             <span className="preset-label">Quick location:</span>
             <div className="preset-chips">
-              {LOCATION_PRESETS.map((preset) => (
+              {locationPresets.map((preset) => (
                 <button
                   type="button"
                   key={preset}

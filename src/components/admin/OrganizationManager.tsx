@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   FileCheck,
   FolderTree,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -28,6 +29,7 @@ import {
   updatePCFStatus,
 } from '../../services/organizationService';
 import { TargetManagementView } from './TargetManagementView';
+import { CampaignSettingsView } from './CampaignSettingsView';
 import { ReconciliationView } from './ReconciliationView';
 import { DuplicateResolutionsView } from './DuplicateResolutionsView';
 import type { Zone, Group, Church, PCF, EntityStatus } from '../../types/organization';
@@ -36,7 +38,8 @@ export const OrganizationManager: React.FC = () => {
   const { userProfile: currentUser, role } = useAuth();
   const isSuperAdmin = role === 'superAdmin';
 
-  const [activeTab, setActiveTab] = useState<'tree' | 'zones' | 'groups' | 'churches' | 'pcfs' | 'search' | 'targets' | 'reconciliation' | 'resolutions'>('tree');
+  const [activeTab, setActiveTab] = useState<'tree' | 'zones' | 'groups' | 'churches' | 'pcfs' | 'search' | 'targets' | 'settings' | 'reconciliation' | 'resolutions'>('tree');
+
 
   const [zones, setZones] = useState<Zone[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -310,7 +313,14 @@ export const OrganizationManager: React.FC = () => {
           onClick={() => { setActiveTab('targets'); setError(''); setSuccess(''); }}
           className={`subtab-btn ${activeTab === 'targets' ? 'subtab-active' : ''}`}
         >
-          TARGETS
+          <Building size={14} className="inline-icon" /> TARGETS
+        </button>
+        <button
+          onClick={() => { setActiveTab('settings'); setError(''); setSuccess(''); }}
+          className={`subtab-btn ${activeTab === 'settings' ? 'subtab-active' : ''}`}
+          style={{ color: activeTab === 'settings' ? '#00ff87' : '#cbd5e1' }}
+        >
+          <Sliders size={14} className="inline-icon" /> SETTINGS
         </button>
         <button
           onClick={() => { setActiveTab('reconciliation'); setError(''); setSuccess(''); }}
@@ -345,8 +355,11 @@ export const OrganizationManager: React.FC = () => {
         <DuplicateResolutionsView />
       ) : activeTab === 'reconciliation' ? (
         <ReconciliationView />
+      ) : activeTab === 'settings' ? (
+        <CampaignSettingsView />
       ) : activeTab === 'targets' ? (
         <TargetManagementView />
+
       ) : activeTab === 'search' ? (
         <div className="search-org-section">
           <div className="input-wrapper">

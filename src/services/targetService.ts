@@ -72,6 +72,62 @@ export async function saveTarget(
   return targetData;
 }
 
+/** Saves or updates multiple organization targets in batch */
+export async function saveMultipleTargets(
+  targetsList: TargetFormData[],
+  userId: string
+): Promise<Target[]> {
+  const now = new Date().toISOString();
+  const savedTargets: Target[] = [];
+  const local = getCachedLocalTargets();
+
+  for (const item of targetsList) {
+    if (item.target <= 0 || isNaN(item.target)) continue;
+
+    const targetId = `${REACH_OUT_NIGERIA_EVENT.id}_${item.level}_${item.organizationId}`;
+    const targetData: Target = {
+      id: targetId,
+      eventId: REACH_OUT_NIGERIA_EVENT.id,
+      level: item.level,
+      organizationId: item.organizationId,
+      target: Math.round(item.target),
+      createdAt: now,
+      updatedAt: now,
+      createdBy: userId,
+      updatedBy: userId,
+      status: 'active',
+    };
+
+    savedTargets.push(targetData);
+
+    const idx = local.findIndex((t) => t.id === targetId);
+    if (idx >= 0) {
+      local[idx] = targetData;
+    } else {
+      local.push(targetData);
+    }
+  }
+
+  // Update local cache
+  setCachedLocalTargets(local);
+
+  // Sync to Firestore if online
+  if (navigator.onLine) {
+    try {
+      const promises = savedTargets.map((td) => {
+        const docRef = doc(db, TARGETS_COLLECTION, td.id);
+        return setDoc(docRef, td, { merge: true });
+      });
+      await Promise.all(promises);
+    } catch (err) {
+      console.warn('Error saving batch targets to Firestore:', err);
+    }
+  }
+
+  return savedTargets;
+}
+
+
 /** Subscribes to realtime updates on targets */
 export function subscribeToTargets(onUpdate: (targets: Target[]) => void): () => void {
   if (!navigator.onLine) {

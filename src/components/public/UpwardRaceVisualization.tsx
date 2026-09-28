@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUp, Trophy, Flag, BarChart2 } from 'lucide-react';
 import type { GroupRaceCompetitor } from '../../services/counterService';
+import { useEventConfig } from '../../hooks/useEventConfig';
 
 interface UpwardRaceVisualizationProps {
   competitors: GroupRaceCompetitor[];
@@ -8,39 +9,45 @@ interface UpwardRaceVisualizationProps {
   fullHeight?: boolean;
   highlightGroupId?: string;
   highlightGroupName?: string;
+  thresholdYellow?: number;
+  thresholdGreen?: number;
 }
 
-/** Returns exact color config based on percentage rules: <50% Red, 50-74% Yellow, >=75% Bright Green */
-export function getBarColorConfig(percentage: number) {
-  if (percentage < 50) {
+/** Returns exact color config based on tunable percentage rules: < Yellow Red, Yellow-Green, >= Green */
+export function getBarColorConfig(
+  percentage: number,
+  thresholdYellow: number = 50,
+  thresholdGreen: number = 75
+) {
+  if (percentage < thresholdYellow) {
     return {
-      // RED (< 50%)
+      // RED (< thresholdYellow)
       background: 'linear-gradient(180deg, #ff453a 0%, #b30000 100%)',
       glow: '0 0 12px rgba(255, 69, 58, 0.7), inset 0 2px 4px rgba(255,255,255,0.7)',
       textColor: '#ff453a',
       badgeBg: 'rgba(255, 69, 58, 0.15)',
       badgeBorder: 'rgba(255, 69, 58, 0.3)',
-      tierName: 'BELOW 50%',
+      tierName: `BELOW ${thresholdYellow}%`,
     };
-  } else if (percentage < 75) {
+  } else if (percentage < thresholdGreen) {
     return {
-      // YELLOW (50% - 74%)
+      // YELLOW (thresholdYellow - thresholdGreen - 1)
       background: 'linear-gradient(180deg, #ffcc00 0%, #b38f00 100%)',
       glow: '0 0 12px rgba(255, 204, 0, 0.75), inset 0 2px 4px rgba(255,255,255,0.7)',
       textColor: '#ffd60a',
       badgeBg: 'rgba(255, 204, 0, 0.15)',
       badgeBorder: 'rgba(255, 204, 0, 0.3)',
-      tierName: '50% - 74%',
+      tierName: `${thresholdYellow}% - ${thresholdGreen - 1}%`,
     };
   } else {
     return {
-      // BRIGHT GREEN (>= 75%)
+      // BRIGHT GREEN (>= thresholdGreen)
       background: 'linear-gradient(180deg, #00ff87 0%, #00994d 100%)',
       glow: '0 0 14px rgba(0, 255, 135, 0.8), inset 0 2px 4px rgba(255,255,255,0.7)',
       textColor: '#00ff87',
       badgeBg: 'rgba(0, 255, 135, 0.15)',
       badgeBorder: 'rgba(0, 255, 135, 0.3)',
-      tierName: '75%+',
+      tierName: `${thresholdGreen}%+`,
     };
   }
 }
@@ -51,7 +58,13 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
   fullHeight = false,
   highlightGroupId,
   highlightGroupName,
+  thresholdYellow: customYellow,
+  thresholdGreen: customGreen,
 }) => {
+  const { eventConfig } = useEventConfig();
+  const thresholdYellow = customYellow ?? eventConfig.raceThresholdYellow ?? 50;
+  const thresholdGreen = customGreen ?? eventConfig.raceThresholdGreen ?? 75;
+
   if (variant === 'barChart') {
     const displayCompetitors = competitors;
 
@@ -69,19 +82,20 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
             {/* Color Threshold Legend Pill beside Heading */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.12)', fontSize: '0.74rem' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ff453a', fontWeight: '800' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff453a' }} /> &lt;50% Red
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff453a' }} /> &lt;{thresholdYellow}% Red
               </span>
               <span style={{ color: '#64748b' }}>|</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ffd60a', fontWeight: '800' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffd60a' }} /> 50-74% Yellow
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffd60a' }} /> {thresholdYellow}–{thresholdGreen - 1}% Yellow
               </span>
               <span style={{ color: '#64748b' }}>|</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#00ff87', fontWeight: '800' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ff87' }} /> 75%+ Green
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ff87' }} /> {thresholdGreen}%+ Green
               </span>
             </div>
           </div>
         </div>
+
 
         {displayCompetitors.length === 0 ? (
           <div className="race-empty-box">
@@ -130,7 +144,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                   Math.min(100, (comp.normalizedProgress ?? comp.percentage / 100) * 100)
                 );
                 const displayPct = comp.displayPercentage || `${comp.percentage}%`;
-                const colorConfig = getBarColorConfig(comp.percentage);
+                const colorConfig = getBarColorConfig(comp.percentage, thresholdYellow, thresholdGreen);
 
                 const isMyGroup = Boolean(
                   (highlightGroupId && comp.id === highlightGroupId) ||

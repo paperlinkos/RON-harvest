@@ -4,6 +4,7 @@ import {
   getEventConfig,
   subscribeToEventConfig,
   updateEventStatus,
+  updateEventConfig,
   getLocalEventConfig,
 } from '../services/eventService';
 import { useAuth } from '../context/AuthContext';
@@ -105,6 +106,19 @@ export function useEventConfig() {
     [eventConfig.id, userProfile?.id]
   );
 
+  const saveSettings = useCallback(
+    async (updates: Partial<EventConfig>): Promise<boolean> => {
+      const actorId = userProfile?.id || 'superAdmin';
+      const result = await updateEventConfig(eventConfig.id, updates, actorId);
+      if (result.success && result.config) {
+        setEventConfig(result.config);
+        return true;
+      }
+      return false;
+    },
+    [eventConfig.id, userProfile?.id]
+  );
+
   return {
     eventConfig,
     status: eventConfig.status,
@@ -114,5 +128,6 @@ export function useEventConfig() {
     countdown,
     isLoading,
     changeStatus,
+    saveSettings,
   };
 }

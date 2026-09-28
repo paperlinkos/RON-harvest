@@ -1,6 +1,7 @@
 import { getAllLocalRecords } from './indexedDbService';
 import { getGroups, getChurches, getPCFs } from './organizationService';
 import { getTargets } from './targetService';
+import { getLocalEventConfig } from './eventService';
 import { getUserScope, isAuthorizedForOrg, type UserScope } from './roleScopeService';
 import { calculateOrganizationProgress } from './targetProgressEngine';
 import type { UserProfile, SoulWinnerProfile } from '../types/auth';
@@ -97,7 +98,7 @@ export async function getDashboardViewData(
   );
   
   // Default target fallback if not custom set
-  const defaultTarget = activeLevel === 'zone' ? 40000 : activeLevel === 'group' ? 5000 : 1000;
+  const defaultTarget = activeLevel === 'zone' ? (getLocalEventConfig().target || 40000) : activeLevel === 'group' ? 5000 : 1000;
   const target = targetObj ? targetObj.target : defaultTarget;
 
   const mainProgress = calculateOrganizationProgress({
