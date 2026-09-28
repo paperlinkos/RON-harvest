@@ -12,9 +12,10 @@ interface NavigationProps {
 export const Navigation: React.FC<NavigationProps> = ({ activeTab, onSelectTab }) => {
   const { isAuthenticated, isPendingAssignment, role } = useAuth();
   const isSuperAdmin = role === 'superAdmin';
+  const showRaceTab = role !== 'soulWinner';
 
   return (
-    <nav className="bottom-nav" style={{ gridTemplateColumns: isSuperAdmin ? '1fr 1fr 1fr 1fr 1fr' : '1fr 1fr 1fr 1fr' }}>
+    <nav className="bottom-nav">
       <button
         onClick={() => onSelectTab('home')}
         className={`nav-tab ${activeTab === 'home' ? 'nav-tab-active' : ''}`}
@@ -23,13 +24,15 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onSelectTab }
         <span>HOME</span>
       </button>
 
-      <button
-        onClick={() => onSelectTab('race')}
-        className={`nav-tab ${activeTab === 'race' ? 'nav-tab-active' : ''}`}
-      >
-        <Trophy size={18} />
-        <span>RACE</span>
-      </button>
+      {showRaceTab && (
+        <button
+          onClick={() => onSelectTab('race')}
+          className={`nav-tab ${activeTab === 'race' ? 'nav-tab-active' : ''}`}
+        >
+          <Trophy size={18} />
+          <span>RACE</span>
+        </button>
+      )}
 
       <button
         onClick={() => onSelectTab('record')}

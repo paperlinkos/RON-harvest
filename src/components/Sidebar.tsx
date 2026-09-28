@@ -74,14 +74,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
           {!isCollapsed && <span>HOME & COUNTER</span>}
         </button>
 
-        <button
-          onClick={() => onSelectTab('race')}
-          className={`sidebar-link ${activeTab === 'race' ? 'sidebar-link-active' : ''}`}
-          title="Upward Race"
-        >
-          <Trophy size={20} />
-          {!isCollapsed && <span>UPWARD RACE</span>}
-        </button>
+        {role !== 'soulWinner' && (
+          <button
+            onClick={() => onSelectTab('race')}
+            className={`sidebar-link ${activeTab === 'race' ? 'sidebar-link-active' : ''}`}
+            title="Upward Race"
+          >
+            <Trophy size={20} />
+            {!isCollapsed && <span>UPWARD RACE</span>}
+          </button>
+        )}
 
         <button
           onClick={() => onSelectTab('record')}

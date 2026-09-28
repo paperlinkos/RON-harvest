@@ -116,7 +116,7 @@ const MainContent: React.FC = () => {
             />
           )}
 
-          {activeTab === 'race' && (
+          {activeTab === 'race' && role !== 'soulWinner' && (
             <UpwardRaceView />
           )}
 
