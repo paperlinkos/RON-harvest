@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Sparkles, Search, X } from 'lucide-react';
+import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Sparkles, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { getAllLocalRecords } from '../../services/indexedDbService';
@@ -37,6 +37,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
   const [activePage, setActivePage] = useState<'counter' | 'groups' | 'churches'>('counter');
   const [churchStandings, setChurchStandings] = useState<ChurchStandingItem[]>([]);
   const [churchSearchQuery, setChurchSearchQuery] = useState<string>('');
+  const [isDockCollapsed, setIsDockCollapsed] = useState<boolean>(false);
 
   // Keyboard controls: 1 = Counter, 2 = Groups, 3 = Churches, Esc = Exit
   useEffect(() => {
@@ -108,7 +109,58 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
   return (
     <div className="big-screen-backdrop" role="dialog" aria-modal="true" aria-label="Big Screen Live Display Mode">
-      <div className="big-screen-container" style={{ paddingBottom: '90px' }}>
+      {/* LEFT SIDE COLLAPSIBLE PROJECTOR NAVIGATION DOCK */}
+      <div className={`big-screen-left-dock ${isDockCollapsed ? 'dock-collapsed' : 'dock-expanded'}`}>
+        <button
+          type="button"
+          onClick={() => setIsDockCollapsed(!isDockCollapsed)}
+          className="dock-toggle-btn"
+          title={isDockCollapsed ? 'Expand Navigation Menu' : 'Collapse Navigation Menu'}
+        >
+          {isDockCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {!isDockCollapsed && <span style={{ fontSize: '0.74rem', fontWeight: '800', letterSpacing: '0.04em' }}>COLLAPSE MENU</span>}
+        </button>
+
+        <div className="dock-divider" />
+
+        <button
+          type="button"
+          onClick={() => setActivePage('counter')}
+          className={`dock-btn ${activePage === 'counter' ? 'dock-btn-active' : ''}`}
+          title="Overall Counter (Press 1)"
+        >
+          <Layers size={18} />
+          {!isDockCollapsed && <span>OVERALL COUNTER</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActivePage('groups')}
+          className={`dock-btn ${activePage === 'groups' ? 'dock-btn-active' : ''}`}
+          title="Groups Race (Press 2)"
+        >
+          <BarChart2 size={18} />
+          {!isDockCollapsed && <span>GROUPS RACE</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActivePage('churches')}
+          className={`dock-btn ${activePage === 'churches' ? 'dock-btn-active' : ''}`}
+          title="Churches Standings (Press 3)"
+        >
+          <Church size={18} />
+          {!isDockCollapsed && <span>CHURCHES STANDINGS</span>}
+        </button>
+      </div>
+
+      <div
+        className="big-screen-container"
+        style={{
+          paddingLeft: isDockCollapsed ? '88px' : '240px',
+          transition: 'padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         {/* TOP BAR / CONTROL BUTTONS */}
         <div className="big-screen-header">
           <div className="big-screen-brand">
@@ -431,36 +483,6 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
             </div>     </div>
           </div>
         )}
-
-        {/* BOTTOM PROJECTOR NAVIGATION DOCK */}
-        <div className="big-screen-dock">
-          <button
-            type="button"
-            onClick={() => setActivePage('counter')}
-            className={`dock-btn ${activePage === 'counter' ? 'dock-btn-active' : ''}`}
-          >
-            <Layers size={16} />
-            <span>OVERALL COUNTER</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActivePage('groups')}
-            className={`dock-btn ${activePage === 'groups' ? 'dock-btn-active' : ''}`}
-          >
-            <BarChart2 size={16} />
-            <span>GROUPS RACE</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActivePage('churches')}
-            className={`dock-btn ${activePage === 'churches' ? 'dock-btn-active' : ''}`}
-          >
-            <Church size={16} />
-            <span>CHURCHES STANDINGS</span>
-          </button>
-        </div>
       </div>
     </div>
   );

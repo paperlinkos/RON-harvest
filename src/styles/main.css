@@ -3169,6 +3169,102 @@ select {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
+/* LEFT SIDE COLLAPSIBLE DOCK NAVIGATION FOR BIG SCREEN */
+.big-screen-left-dock {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(13, 25, 19, 0.94);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(80, 242, 142, 0.35);
+  border-radius: 18px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10000;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+  overflow: hidden;
+}
+
+.big-screen-left-dock.dock-expanded {
+  width: 220px;
+}
+
+.big-screen-left-dock.dock-collapsed {
+  width: 60px;
+  align-items: center;
+}
+
+.dock-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.dock-toggle-btn:hover {
+  background: rgba(0, 255, 135, 0.15);
+  border-color: rgba(0, 255, 135, 0.4);
+  color: #00ff87;
+}
+
+.dock-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 2px 0;
+  width: 100%;
+}
+
+.dock-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.dock-btn:hover {
+  background: rgba(0, 255, 135, 0.14);
+  border-color: rgba(0, 255, 135, 0.35);
+  color: #00ff87;
+}
+
+.dock-btn-active {
+  background: linear-gradient(135deg, #008751 0%, #00b36b 100%) !important;
+  border-color: #00ff87 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(0, 135, 81, 0.5);
+}
+
+.big-screen-left-dock.dock-collapsed .dock-btn {
+  padding: 10px;
+  justify-content: center;
+}
+
+
 
 
 
