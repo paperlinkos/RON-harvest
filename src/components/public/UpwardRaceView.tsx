@@ -95,7 +95,7 @@ export const UpwardRaceView: React.FC = () => {
       </div>
 
       {/* DEDICATED VERTICAL TRACK VISUALIZATION */}
-      <section className="upward-race-section" style={{ background: '#ffffff' }}>
+      <section className="upward-race-section">
         <UpwardRaceVisualization competitors={competitors} />
       </section>
 

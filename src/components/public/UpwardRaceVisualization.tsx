@@ -44,7 +44,7 @@ export function getBarColorConfig(percentage: number) {
 
 export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = ({
   competitors,
-  variant = 'classic',
+  variant = 'barChart',
 }) => {
   if (variant === 'barChart') {
     const displayCompetitors = competitors;
