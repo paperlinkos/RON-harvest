@@ -15,7 +15,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onOpenAuth }) => {
         </div>
         <h2 className="hero-title">{REACH_OUT_NIGERIA_EVENT.name}</h2>
         <p className="hero-lead">
-          Reach Out Nigeria is a nation-wide soul-winning mobilization taking place on October 1st, 2026.
+          CEAZ1 Reachout Nigeria Soul Winning Campaign is a zonal mobilization taking place on October 1st, 2026.
         </p>
       </div>
 

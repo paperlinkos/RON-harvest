@@ -16,8 +16,8 @@ export const Header: React.FC<HeaderProps> = ({ pendingCount, syncedCount, onMan
   return (
     <header className="header-container">
       <div className="header-brand">
-        <h1 className="header-title">REACH OUT NIGERIA</h1>
-        <p className="header-subtitle">Soul-Winning Campaign Platform</p>
+        <h1 className="header-title">CEAZ1 REACHOUT NIGERIA</h1>
+        <p className="header-subtitle">SOUL WINNING CAMPAIGN</p>
       </div>
 
       <div className="header-actions">

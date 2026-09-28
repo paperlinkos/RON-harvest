@@ -5,6 +5,7 @@ import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
 import { useEventConfig } from '../../hooks/useEventConfig';
+import { useAuth } from '../../context/AuthContext';
 
 interface PublicHomeViewProps {
   onNavigate?: (tab: 'home' | 'record' | 'account' | 'org' | 'race' | 'about') => void;
@@ -13,6 +14,7 @@ interface PublicHomeViewProps {
 
 export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
   const { eventConfig, isUpcoming, isLive, isCompleted, countdown } = useEventConfig();
+  const { isAuthenticated } = useAuth();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
 
   const [counterData, setCounterData] = useState<ZonalCounterData>({
@@ -37,18 +39,20 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
       {/* EVENT IDENTITY SUBHEADER */}
       <div className="event-date-row">
         <div className="date-tag-left">
-          <span>REACH OUT NIGERIA • 1 OCTOBER CAMPAIGN</span>
+          <span>CEAZ1 REACHOUT NIGERIA SOUL WINNING CAMPAIGN</span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsDisplayModeOpen(true)}
-          className="display-mode-trigger-btn"
-          title="Open Big-Screen / TV Display Mode"
-        >
-          <Tv size={15} />
-          <span>BIG SCREEN MODE</span>
-        </button>
+        {!isAuthenticated && (
+          <button
+            type="button"
+            onClick={() => setIsDisplayModeOpen(true)}
+            className="display-mode-trigger-btn"
+            title="Open Big-Screen / TV Display Mode"
+          >
+            <Tv size={15} />
+            <span>BIG SCREEN MODE</span>
+          </button>
+        )}
       </div>
 
       {/* DOMINANT DIGITAL LED COUNTER HERO */}

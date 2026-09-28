@@ -27,7 +27,7 @@ export const DEFAULT_EVENT_CONFIG: EventConfig = {
   target: 40000,
   status: 'upcoming',
   updatedAt: new Date().toISOString(),
-  description: 'Zonal soul-winning campaign taking place on October 1st, 2026.',
+  description: 'CEAZ1 Reachout Nigeria Soul Winning Campaign taking place on October 1st, 2026.',
 };
 
 export const REACH_OUT_NIGERIA_EVENT = {

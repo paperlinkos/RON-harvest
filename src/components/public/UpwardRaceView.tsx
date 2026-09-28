@@ -4,9 +4,11 @@ import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
 import { useEventConfig } from '../../hooks/useEventConfig';
+import { useAuth } from '../../context/AuthContext';
 
 export const UpwardRaceView: React.FC = () => {
   const { eventConfig } = useEventConfig();
+  const { isAuthenticated } = useAuth();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
   const [expandedGroupIds, setExpandedGroupIds] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -51,19 +53,21 @@ export const UpwardRaceView: React.FC = () => {
               UPWARD RACE TO TARGET
             </h2>
             <p className="dashboard-org-subtitle" style={{ color: '#94a3b8' }}>
-              Vertical progress tracking for Groups & Churches competing to hit their Reach Out Nigeria soul targets. Click any group to view its churches.
+              Vertical progress tracking for Groups & Churches competing to hit their CEAZ1 Reachout Nigeria soul targets. Click any group to view its churches.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsDisplayModeOpen(true)}
-            className="submit-button"
-            style={{ padding: '10px 18px', fontSize: '0.85rem' }}
-          >
-            <Tv size={16} />
-            <span>PROJECT ON TV / BIG SCREEN</span>
-          </button>
+          {!isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => setIsDisplayModeOpen(true)}
+              className="submit-button"
+              style={{ padding: '10px 18px', fontSize: '0.85rem' }}
+            >
+              <Tv size={16} />
+              <span>PROJECT ON TV / BIG SCREEN</span>
+            </button>
+          )}
         </div>
 
         {/* RACE SUMMARY METRICS */}

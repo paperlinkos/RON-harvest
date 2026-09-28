@@ -45,7 +45,7 @@ export const PwaInstallPrompt: React.FC = () => {
     <div className="pwa-install-bar">
       <div className="pwa-install-content">
         <Download size={18} />
-        <span>Install <strong>Reach Out Nigeria</strong> app for fast offline recording</span>
+        <span>Install <strong>CEAZ1 Reachout Nigeria</strong> app for fast offline recording</span>
       </div>
       <div className="pwa-install-actions">
         <button onClick={handleInstall} className="pwa-install-btn">

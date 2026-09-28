@@ -112,7 +112,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
         </div>
         <h2 className="form-title text-center">EVENT COMPLETED</h2>
         <p className="form-lead text-center">
-          Soul recording for Reach Out Nigeria 2026 is now closed.
+          Soul recording for CEAZ1 Reachout Nigeria Soul Winning Campaign 2026 is now closed.
         </p>
         {mySoulsWon > 0 && (
           <div className="my-total-pill mx-auto">

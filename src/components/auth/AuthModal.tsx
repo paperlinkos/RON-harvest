@@ -130,7 +130,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
         <div className="modal-header">
           <h3 className="modal-title">
-            {mode === 'login' && 'Sign In to Reach Out Nigeria'}
+            {mode === 'login' && 'Sign In to CEAZ1 Reachout Nigeria'}
             {mode === 'signup' && 'Create Soul Winner Account'}
             {mode === 'reset' && 'Reset Your Password'}
           </h3>

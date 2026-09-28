@@ -39,8 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
       <div className="sidebar-header">
         {!isCollapsed && (
           <div className="sidebar-brand">
-            <h1 className="sidebar-title">REACH OUT NIGERIA</h1>
-            <p className="sidebar-subtitle">October 1st Campaign</p>
+            <h1 className="sidebar-title">CEAZ1 REACHOUT NIGERIA</h1>
+            <p className="sidebar-subtitle">SOUL WINNING CAMPAIGN</p>
           </div>
         )}
         <button
