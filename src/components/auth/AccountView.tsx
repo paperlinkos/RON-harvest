@@ -64,6 +64,24 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
     }
   };
 
+  const getRoleLabel = (roleStr?: string) => {
+    switch (roleStr) {
+      case 'superAdmin':
+        return 'Super Admin';
+      case 'zoneManager':
+        return 'Zonal Leader';
+      case 'groupManager':
+        return 'Group Leader';
+      case 'churchManager':
+        return 'Church Leader';
+      case 'pcfLeader':
+        return 'PCF Leader';
+      case 'soulWinner':
+      default:
+        return 'Soul Winner';
+    }
+  };
+
   return (
     <div className="account-card">
       <div className="account-header-row">
@@ -85,10 +103,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
         <div className="banner banner-success" role="status">
           <CheckCircle2 size={18} />
           <div>
-            <strong>Status: Active Soul Winner</strong>
-            <p className="banner-subtext">
-              Your account is active and connected to your organizational hierarchy.
-            </p>
+            <strong>Status: {getRoleLabel(userProfile.role)}</strong>
           </div>
         </div>
       )}
@@ -117,7 +132,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
           <Shield size={14} className="detail-icon" />
           <div>
             <span className="detail-label">Role</span>
-            <span className="detail-value">{userProfile.role}</span>
+            <span className="detail-value">{getRoleLabel(userProfile.role)}</span>
           </div>
         </div>
       </div>

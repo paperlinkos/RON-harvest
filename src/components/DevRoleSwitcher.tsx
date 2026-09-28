@@ -39,15 +39,15 @@ export const DevRoleSwitcher: React.FC = () => {
       : role === 'superAdmin'
       ? 'Super Admin'
       : role === 'zoneManager'
-      ? 'Zonal Manager'
+      ? 'Zonal Leader'
       : role === 'groupManager'
-      ? 'Group Manager'
+      ? 'Group Leader'
       : role === 'churchManager'
-      ? 'Church Manager'
+      ? 'Church Leader'
       : role === 'pcfLeader'
       ? 'PCF Leader'
       : role === 'soulWinner'
-      ? 'Active Soul Winner'
+      ? 'Soul Winner'
       : 'Observer (Logged Out)';
 
   return (
@@ -183,7 +183,7 @@ export const DevRoleSwitcher: React.FC = () => {
                 textAlign: 'left',
               }}
             >
-              Active Winner
+              Soul Winner
             </button>
             <button
               onClick={() => handleRoleSelect('logout')}

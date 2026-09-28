@@ -155,7 +155,7 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
               <span>SOUL WINNER DASHBOARD</span>
             </div>
             <h1 className="dashboard-org-title" style={{ fontSize: '1.8rem', color: '#ffffff', margin: '8px 0 4px 0' }}>
-              {userProfile?.name || 'Active Soul Winner'}
+              {userProfile?.name || 'Soul Winner'}
             </h1>
             <p className="dashboard-org-subtitle" style={{ color: '#94a3b8', margin: 0 }}>
               Church: <strong style={{ color: '#4ade80' }}>{soulWinnerProfile?.churchName || 'CE Gwarinpa 1'}</strong> • Group:{' '}
