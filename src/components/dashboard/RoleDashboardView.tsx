@@ -3,7 +3,6 @@ import {
   ChevronRight,
   TrendingUp,
   CheckCircle2,
-  Sparkles,
   Users,
   Building,
   HeartHandshake,
@@ -190,7 +189,6 @@ export const RoleDashboardView: React.FC<RoleDashboardViewProps> = ({ onNavigate
               <span className="dash-pct-text">{data.displayPercentage}</span>
               {data.isTargetExceeded && (
                 <span className="exceeded-tag" title="Target Exceeded!">
-                  <Sparkles size={14} className="text-gold" />
                   <span>EXCEEDED</span>
                 </span>
               )}

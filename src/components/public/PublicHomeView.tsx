@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, CheckCircle2, Clock, Tv } from 'lucide-react';
+import { CheckCircle2, Clock, Tv } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
@@ -37,7 +37,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
       {/* EVENT IDENTITY SUBHEADER */}
       <div className="event-date-row">
         <div className="date-tag-left">
-          <Sparkles size={16} className="text-green-accent" />
           <span>REACH OUT NIGERIA • 1 OCTOBER CAMPAIGN</span>
         </div>
 

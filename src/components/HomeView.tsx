@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, HeartHandshake, Compass, UserCheck, Target, Calendar, Lock } from 'lucide-react';
+import { HeartHandshake, Compass, UserCheck, Target, Calendar, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { REACH_OUT_NIGERIA_EVENT } from '../config/eventConfig';
 
@@ -23,7 +23,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, onOpenAuth }) =>
     <div className="home-card">
       <div className="home-hero">
         <div className="hero-badge">
-          <Sparkles size={14} />
           <span>CAMPAIGN EVENT</span>
         </div>
         <h2 className="hero-title">{REACH_OUT_NIGERIA_EVENT.name}</h2>

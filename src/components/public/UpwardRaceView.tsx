@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Sparkles, Tv, Flame, ChevronDown, ChevronUp, Church, Search, X } from 'lucide-react';
+import { Trophy, Tv, Flame, ChevronDown, ChevronUp, Church, Search, X } from 'lucide-react';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
@@ -237,7 +237,7 @@ export const UpwardRaceView: React.FC = () => {
                             )}
                             {comp.isTargetExceeded && (
                               <span className="exceeded-tag">
-                                <Sparkles size={11} /> TARGET EXCEEDED
+                                TARGET EXCEEDED
                               </span>
                             )}
                             <span

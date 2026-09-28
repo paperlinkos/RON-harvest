@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Target, Calendar, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { Target, Calendar, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { REACH_OUT_NIGERIA_EVENT } from '../../config/eventConfig';
 
 interface AboutViewProps {
@@ -11,7 +11,6 @@ export const AboutView: React.FC<AboutViewProps> = ({ onOpenAuth }) => {
     <div className="public-card">
       <div className="public-hero">
         <div className="hero-badge">
-          <Sparkles size={14} />
           <span>ABOUT THE CAMPAIGN</span>
         </div>
         <h2 className="hero-title">{REACH_OUT_NIGERIA_EVENT.name}</h2>

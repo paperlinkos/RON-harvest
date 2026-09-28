@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Sparkles, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { getAllLocalRecords } from '../../services/indexedDbService';

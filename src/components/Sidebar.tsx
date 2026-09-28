@@ -12,7 +12,6 @@ import {
   LogOut,
   Wifi,
   WifiOff,
-  Sparkles,
   Activity,
   Database,
 } from 'lucide-react';
@@ -200,7 +199,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
                   <span>Sign In</span>
                 </button>
                 <button onClick={() => onOpenAuth('signup')} className="btn-green-accent btn-sm">
-                  <Sparkles size={14} />
                   <span>Register</span>
                 </button>
               </div>

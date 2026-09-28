@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp, Trophy, Flag, Sparkles, BarChart2 } from 'lucide-react';
+import { ArrowUp, Trophy, Flag, BarChart2 } from 'lucide-react';
 import type { GroupRaceCompetitor } from '../../services/counterService';
 
 interface UpwardRaceVisualizationProps {
@@ -221,7 +221,6 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         }}
                       >
                         {displayPct}
-                        {comp.percentage >= 100 && <Sparkles size={8} style={{ color: '#FFD700' }} />}
                       </span>
 
                       {/* Souls Count Readout */}
@@ -289,11 +288,6 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                   <div className="competitor-top-badge">
                     <div className="comp-pct">
                       {displayPct}
-                      {comp.isTargetExceeded && (
-                        <span title="Target Exceeded!">
-                          <Sparkles size={11} className="inline-icon text-gold" />
-                        </span>
-                      )}
                     </div>
                     <div className="comp-souls">
                       {comp.soulsWon.toLocaleString()}{comp.hasTarget ? ` / ${comp.target.toLocaleString()}` : ''}

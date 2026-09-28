@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { seedDemoData } from '../utils/demoDataSeeder';
-import { Shield, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, ChevronDown, ChevronUp } from 'lucide-react';
 import type { UserRole } from '../types/auth';
 
 export const DevRoleSwitcher: React.FC = () => {
@@ -180,7 +180,7 @@ export const DevRoleSwitcher: React.FC = () => {
                 textAlign: 'left',
               }}
             >
-              ✨ Active Winner
+              Active Winner
             </button>
             <button
               onClick={() => handleRoleSelect('logout')}
@@ -219,7 +219,6 @@ export const DevRoleSwitcher: React.FC = () => {
                 gap: '8px',
               }}
             >
-              <Sparkles size={16} />
               {isSeeding ? 'Seeding Demo Data...' : seedSuccess ? 'Demo Data Seeded!' : '⚡ Seed Demo Data & Hierarchy'}
             </button>
           </div>
