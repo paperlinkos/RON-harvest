@@ -235,7 +235,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
         {/* PAGE 2: GROUPS RACE VIEW (WITH MINI OVERALL ZONAL PROGRESS BAR) */}
         {activePage === 'groups' && (
-          <div className="big-screen-page-groups" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="big-screen-page-groups" style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, height: '100%', minHeight: 'calc(100vh - 160px)' }}>
             {/* MINI PERSISTENT OVERALL ZONAL TARGET PROGRESS BAR */}
             <div
               style={{
@@ -274,9 +274,9 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
               </div>
             </div>
 
-            {/* DEDICATED GROUP BAR CHART */}
-            <div className="big-screen-race-section">
-              <UpwardRaceVisualization competitors={counterData.groupCompetitors} variant="barChart" />
+            {/* DEDICATED GROUP BAR CHART (FULL HEIGHT) */}
+            <div className="big-screen-race-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <UpwardRaceVisualization competitors={counterData.groupCompetitors} variant="barChart" fullHeight />
             </div>
           </div>
         )}

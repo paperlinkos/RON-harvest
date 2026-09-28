@@ -5,6 +5,7 @@ import type { GroupRaceCompetitor } from '../../services/counterService';
 interface UpwardRaceVisualizationProps {
   competitors: GroupRaceCompetitor[];
   variant?: 'classic' | 'barChart';
+  fullHeight?: boolean;
 }
 
 /** Returns exact color config based on percentage rules: <50% Red, 50-74% Yellow, >=75% Bright Green */
@@ -45,12 +46,13 @@ export function getBarColorConfig(percentage: number) {
 export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = ({
   competitors,
   variant = 'barChart',
+  fullHeight = false,
 }) => {
   if (variant === 'barChart') {
     const displayCompetitors = competitors;
 
     return (
-      <div className="race-container bar-chart-variant">
+      <div className="race-container bar-chart-variant" style={{ height: fullHeight ? '100%' : 'auto', display: 'flex', flexDirection: 'column', flex: fullHeight ? 1 : 'initial' }}>
         <div className="race-header">
           <div className="race-title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -85,7 +87,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
             </p>
           </div>
         ) : (
-          <div className="barchart-wrapper" style={{ position: 'relative', marginTop: '16px', width: '100%', overflowX: 'auto' }}>
+          <div className="barchart-wrapper" style={{ position: 'relative', marginTop: '16px', width: '100%', overflowX: 'auto', flex: fullHeight ? 1 : 'initial', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             {/* Target 100% Line Banner */}
             <div
               className="barchart-target-line"
@@ -111,9 +113,11 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 gridTemplateColumns: `repeat(${displayCompetitors.length}, minmax(42px, 1fr))`,
                 gap: '6px',
                 alignItems: 'flex-end',
-                minHeight: '260px',
+                minHeight: fullHeight ? '380px' : '260px',
+                height: fullHeight ? 'calc(100vh - 360px)' : 'auto',
                 paddingBottom: '8px',
                 width: '100%',
+                flex: fullHeight ? 1 : 'initial',
               }}
             >
               {displayCompetitors.map((comp, idx) => {
@@ -144,10 +148,11 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                     <div
                       style={{
                         width: '100%',
-                        maxWidth: '22px',
-                        height: '180px',
+                        maxWidth: fullHeight ? '34px' : '22px',
+                        height: fullHeight ? 'calc(100vh - 440px)' : '180px',
+                        minHeight: fullHeight ? '300px' : '180px',
                         background: 'rgba(0, 0, 0, 0.45)',
-                        borderRadius: '4px 4px 0 0',
+                        borderRadius: '6px 6px 0 0',
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'flex-end',
