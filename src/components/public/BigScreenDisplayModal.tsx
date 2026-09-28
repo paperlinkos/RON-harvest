@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Sparkles } from 'lucide-react';
+import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Sparkles, Search, X } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { getAllLocalRecords } from '../../services/indexedDbService';
@@ -36,6 +36,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 }) => {
   const [activePage, setActivePage] = useState<'counter' | 'groups' | 'churches'>('counter');
   const [churchStandings, setChurchStandings] = useState<ChurchStandingItem[]>([]);
+  const [churchSearchQuery, setChurchSearchQuery] = useState<string>('');
 
   // Keyboard controls: 1 = Counter, 2 = Groups, 3 = Churches, Esc = Exit
   useEffect(() => {
@@ -272,20 +273,72 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                   }}
                 />
               </div>
-            </div>
-
-            {/* CHURCHES STANDINGS GRID */}
+            </div>            {/* CHURCHES STANDINGS GRID */}
             <div style={{ background: '#0d1913', padding: '24px', borderRadius: '16px', border: '1px solid rgba(80, 242, 142, 0.25)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px dashed rgba(255, 255, 255, 0.15)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px dashed rgba(255, 255, 255, 0.15)', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Church size={22} style={{ color: '#00ff87' }} />
                   <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ffffff', margin: 0 }}>
                     CHURCHES STANDINGS LEADERBOARD
                   </h3>
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800', padding: '4px 12px', borderRadius: '16px', background: 'rgba(0, 255, 135, 0.15)', color: '#00ff87', border: '1px solid rgba(0, 255, 135, 0.3)' }}>
-                  {churchStandings.length} CHURCHES COMPETING
-                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  {/* SEARCH INPUT */}
+                  <div style={{ position: 'relative', width: '280px' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+                    <input
+                      type="text"
+                      placeholder="Search church or group..."
+                      value={churchSearchQuery}
+                      onChange={(e) => setChurchSearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 32px 8px 36px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(0, 255, 135, 0.3)',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        color: '#ffffff',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    {churchSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setChurchSearchQuery('')}
+                        style={{
+                          position: 'absolute',
+                          right: '10px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: '#94a3b8',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', padding: '4px 12px', borderRadius: '16px', background: 'rgba(0, 255, 135, 0.15)', color: '#00ff87', border: '1px solid rgba(0, 255, 135, 0.3)' }}>
+                    {churchStandings.filter((c) => {
+                      if (!churchSearchQuery.trim()) return true;
+                      const q = churchSearchQuery.toLowerCase().trim();
+                      return (
+                        c.name.toLowerCase().includes(q) ||
+                        c.code.toLowerCase().includes(q) ||
+                        c.groupName.toLowerCase().includes(q)
+                      );
+                    }).length} OF {churchStandings.length} CHURCHES
+                  </span>
+                </div>
               </div>
 
               {churchStandings.length === 0 ? (
@@ -293,66 +346,89 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                   Loading church standings...
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '12px' }}>
-                  {churchStandings.map((c, idx) => {
-                    const cRank = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`;
-                    const rankColor = idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#94a3b8';
-
+                (() => {
+                  const filtered = churchStandings.filter((c) => {
+                    if (!churchSearchQuery.trim()) return true;
+                    const q = churchSearchQuery.toLowerCase().trim();
                     return (
-                      <div
-                        key={c.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'space-between',
-                          padding: '12px 16px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          borderRadius: '10px',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          gap: '12px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-                          <span style={{ fontSize: '0.88rem', fontWeight: '900', color: rankColor, minWidth: '42px' }}>
-                            {cRank}
-                          </span>
-                          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {c.name}
-                              </span>
-                              {c.code && (
-                                <span style={{ color: '#94a3b8', fontWeight: '500', fontSize: '0.78rem' }}>
-                                  ({c.code})
-                                </span>
-                              )}
-                            </div>
-                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600' }}>
-                              {c.groupName}
-                            </span>
-                            <div className="child-progress-track" style={{ height: '6px', marginTop: '6px', width: '100%', maxWidth: '240px' }}>
-                              <div
-                                className="child-progress-fill"
-                                style={{ width: `${Math.min(100, c.percentage)}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
+                      c.name.toLowerCase().includes(q) ||
+                      c.code.toLowerCase().includes(q) ||
+                      c.groupName.toLowerCase().includes(q)
+                    );
+                  });
 
-                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', minWidth: '85px' }}>
-                          <span style={{ fontWeight: '900', color: '#00ff87', fontSize: '0.92rem' }}>
-                            {c.displayPercentage}
-                          </span>
-                          <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
-                            {c.soulsWon.toLocaleString()} / {c.target > 0 ? c.target.toLocaleString() : 'Not Set'}
-                          </span>
-                        </div>
+                  if (filtered.length === 0) {
+                    return (
+                      <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                        No churches found matching "{churchSearchQuery}".
                       </div>
                     );
-                  })}
-                </div>
+                  }
+
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '12px' }}>
+                      {filtered.map((c, idx) => {
+                        const originalIndex = churchStandings.findIndex((orig) => orig.id === c.id);
+                        const cRank = originalIndex === 0 ? '🥇 1st' : originalIndex === 1 ? '🥈 2nd' : originalIndex === 2 ? '🥉 3rd' : `#${originalIndex + 1}`;
+                        const rankColor = originalIndex === 0 ? '#FFD700' : originalIndex === 1 ? '#C0C0C0' : originalIndex === 2 ? '#CD7F32' : '#94a3b8';
+
+                        return (
+                          <div
+                            key={c.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justify: 'space-between',
+                              padding: '12px 16px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              borderRadius: '10px',
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              gap: '12px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                              <span style={{ fontSize: '0.88rem', fontWeight: '900', color: rankColor, minWidth: '42px' }}>
+                                {cRank}
+                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {c.name}
+                                  </span>
+                                  {c.code && (
+                                    <span style={{ color: '#94a3b8', fontWeight: '500', fontSize: '0.78rem' }}>
+                                      ({c.code})
+                                    </span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600' }}>
+                                  {c.groupName}
+                                </span>
+                                <div className="child-progress-track" style={{ height: '6px', marginTop: '6px', width: '100%', maxWidth: '240px' }}>
+                                  <div
+                                    className="child-progress-fill"
+                                    style={{ width: `${Math.min(100, c.percentage)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', minWidth: '85px' }}>
+                              <span style={{ fontWeight: '900', color: '#00ff87', fontSize: '0.92rem' }}>
+                                {c.displayPercentage}
+                              </span>
+                              <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                                {c.soulsWon.toLocaleString()} / {c.target > 0 ? c.target.toLocaleString() : 'Not Set'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()
               )}
-            </div>
+            </div>     </div>
           </div>
         )}
 

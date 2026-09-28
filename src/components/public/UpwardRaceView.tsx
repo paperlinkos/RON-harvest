@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Sparkles, Tv, Flame, ChevronDown, ChevronUp, Church } from 'lucide-react';
+import { Trophy, Sparkles, Tv, Flame, ChevronDown, ChevronUp, Church, Search, X } from 'lucide-react';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
@@ -9,6 +9,7 @@ export const UpwardRaceView: React.FC = () => {
   const { eventConfig } = useEventConfig();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
   const [expandedGroupIds, setExpandedGroupIds] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [counterData, setCounterData] = useState<ZonalCounterData>({
     totalSoulsWon: 0,
@@ -101,12 +102,56 @@ export const UpwardRaceView: React.FC = () => {
 
       {/* DETAILED LEADERBOARD TABLE */}
       <div className="account-card" style={{ background: '#ffffff' }}>
-        <div className="children-header">
+        <div className="children-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
           <h3 className="children-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Flame size={18} className="text-gold" />
-            <span>GROUP STANDINGS LEADERBOARD</span>
+            <span>GROUP & CHURCH STANDINGS</span>
           </h3>
-          <span className="personal-count-chip">{competitors.length} GROUPS COMPETING</span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {/* SEARCH INPUT BAR */}
+            <div style={{ position: 'relative', width: '260px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input
+                type="text"
+                placeholder="Search church or group..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '7px 28px 7px 34px',
+                  borderRadius: '18px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.84rem',
+                  outline: 'none',
+                  background: '#f8fafc',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <span className="personal-count-chip">{competitors.length} GROUPS COMPETING</span>
+          </div>
         </div>
 
         {competitors.length === 0 ? (
@@ -117,183 +162,225 @@ export const UpwardRaceView: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="soul-winners-grid">
-            {competitors.map((comp, idx) => {
-              const rankBadge =
-                idx === 0
-                  ? '🥇 1st'
-                  : idx === 1
-                  ? '🥈 2nd'
-                  : idx === 2
-                  ? '🥉 3rd'
-                  : `#${idx + 1}`;
+          (() => {
+            const query = searchQuery.trim().toLowerCase();
 
-              const isExpanded = !!expandedGroupIds[comp.id];
-              const churchesCount = comp.churches ? comp.churches.length : 0;
+            // Filter groups or groups containing matching churches
+            const filteredCompetitors = competitors.filter((comp) => {
+              if (!query) return true;
+              const matchesGroup = comp.name.toLowerCase().includes(query) || (comp.code && comp.code.toLowerCase().includes(query));
+              const matchesChurch = comp.churches?.some(
+                (c) => c.name.toLowerCase().includes(query) || (c.code && c.code.toLowerCase().includes(query))
+              );
+              return matchesGroup || matchesChurch;
+            });
 
+            if (filteredCompetitors.length === 0) {
               return (
-                <div key={comp.id} style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
-                  <div
-                    className={`soul-winner-row-card ${isExpanded ? 'group-row-expanded' : ''}`}
-                    onClick={() => toggleGroup(comp.id)}
-                    style={{
-                      padding: '14px 18px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      borderLeft: isExpanded ? '4px solid #008751' : '1px solid var(--color-card-border-public)',
-                      background: isExpanded ? 'rgba(0, 135, 81, 0.04)' : 'var(--color-bg-public)',
-                      boxShadow: isExpanded ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                    }}
-                    title="Click to view/hide churches under this group"
-                  >
-                    <div className="sw-rank" style={{ fontSize: idx < 3 ? '1.1rem' : '0.9rem', fontWeight: '900', minWidth: '54px' }}>
-                      {rankBadge}
-                    </div>
+                <div className="race-empty-box">
+                  <span className="race-empty-badge">NO MATCHES FOUND</span>
+                  <p className="race-empty-text">
+                    No groups or churches found matching "{searchQuery}".
+                  </p>
+                </div>
+              );
+            }
 
-                    <div className="sw-info">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span className="sw-name">{comp.name}</span>
-                        {comp.code && (
-                          <span className="child-code">({comp.code})</span>
-                        )}
-                        {comp.isTargetExceeded && (
-                          <span className="exceeded-tag">
-                            <Sparkles size={11} /> TARGET EXCEEDED
+            return (
+              <div className="soul-winners-grid">
+                {filteredCompetitors.map((comp) => {
+                  const originalIdx = competitors.findIndex((orig) => orig.id === comp.id);
+                  const rankBadge =
+                    originalIdx === 0
+                      ? '🥇 1st'
+                      : originalIdx === 1
+                      ? '🥈 2nd'
+                      : originalIdx === 2
+                      ? '🥉 3rd'
+                      : `#${originalIdx + 1}`;
+
+                  // Auto expand if search query matches a church inside this group
+                  const hasMatchingChurch = query && comp.churches?.some(
+                    (c) => c.name.toLowerCase().includes(query) || (c.code && c.code.toLowerCase().includes(query))
+                  );
+                  const isExpanded = !!expandedGroupIds[comp.id] || !!hasMatchingChurch;
+                  const churchesCount = comp.churches ? comp.churches.length : 0;
+
+                  // Filter churches list if query matches specific churches
+                  const filteredChurches = comp.churches?.filter((c) => {
+                    if (!query) return true;
+                    // If group name matched, show all churches; otherwise filter churches
+                    const matchesGroup = comp.name.toLowerCase().includes(query) || (comp.code && comp.code.toLowerCase().includes(query));
+                    if (matchesGroup) return true;
+                    return c.name.toLowerCase().includes(query) || (c.code && c.code.toLowerCase().includes(query));
+                  });
+
+                  return (
+                    <div key={comp.id} style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                      <div
+                        className={`soul-winner-row-card ${isExpanded ? 'group-row-expanded' : ''}`}
+                        onClick={() => toggleGroup(comp.id)}
+                        style={{
+                          padding: '14px 18px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          borderLeft: isExpanded ? '4px solid #008751' : '1px solid var(--color-card-border-public)',
+                          background: isExpanded ? 'rgba(0, 135, 81, 0.04)' : 'var(--color-bg-public)',
+                          boxShadow: isExpanded ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                        }}
+                        title="Click to view/hide churches under this group"
+                      >
+                        <div className="sw-rank" style={{ fontSize: originalIdx < 3 ? '1.1rem' : '0.9rem', fontWeight: '900', minWidth: '54px' }}>
+                          {rankBadge}
+                        </div>
+
+                        <div className="sw-info">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span className="sw-name">{comp.name}</span>
+                            {comp.code && (
+                              <span className="child-code">({comp.code})</span>
+                            )}
+                            {comp.isTargetExceeded && (
+                              <span className="exceeded-tag">
+                                <Sparkles size={11} /> TARGET EXCEEDED
+                              </span>
+                            )}
+                            <span
+                              style={{
+                                fontSize: '0.72rem',
+                                fontWeight: '700',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                background: isExpanded ? '#008751' : 'rgba(0,0,0,0.06)',
+                                color: isExpanded ? '#ffffff' : '#64748b',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <Church size={11} />
+                              <span>{churchesCount} CHURCHES</span>
+                              {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            </span>
+                          </div>
+
+                          <div className="child-progress-track" style={{ marginTop: '6px' }}>
+                            <div
+                              className="child-progress-fill"
+                              style={{ width: `${Math.min(100, comp.percentage)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          <div className="child-pct-pill">
+                            <span>{comp.displayPercentage || `${comp.percentage}%`}</span>
+                          </div>
+                          <span className="child-code">
+                            {comp.soulsWon.toLocaleString()} / {comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls
                           </span>
-                        )}
-                        <span
+                        </div>
+                      </div>
+
+                      {/* EXPANDABLE CHURCHES ACCORDION */}
+                      {isExpanded && (
+                        <div
+                          className="group-churches-dropdown"
                           style={{
-                            fontSize: '0.72rem',
-                            fontWeight: '700',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            background: isExpanded ? '#008751' : 'rgba(0,0,0,0.06)',
-                            color: isExpanded ? '#ffffff' : '#64748b',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            transition: 'all 0.2s ease',
+                            margin: '4px 0 12px 28px',
+                            padding: '14px 16px',
+                            background: '#ffffff',
+                            borderRadius: '0 0 12px 12px',
+                            borderLeft: '3px solid #008751',
+                            borderRight: '1px solid #e2e8f0',
+                            borderBottom: '1px solid #e2e8f0',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
                           }}
                         >
-                          <Church size={11} />
-                          <span>{churchesCount} CHURCHES</span>
-                          {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </span>
-                      </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px dashed #e2e8f0' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#008751', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <Church size={14} />
+                              <span>CHURCH STANDINGS IN {comp.name.toUpperCase()} ({churchesCount})</span>
+                            </span>
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                              Click group header to collapse
+                            </span>
+                          </div>
 
-                      <div className="child-progress-track" style={{ marginTop: '6px' }}>
-                        <div
-                          className="child-progress-fill"
-                          style={{ width: `${Math.min(100, comp.percentage)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                      <div className="child-pct-pill">
-                        <span>{comp.displayPercentage || `${comp.percentage}%`}</span>
-                      </div>
-                      <span className="child-code">
-                        {comp.soulsWon.toLocaleString()} / {comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* EXPANDABLE CHURCHES ACCORDION */}
-                  {isExpanded && (
-                    <div
-                      className="group-churches-dropdown"
-                      style={{
-                        margin: '4px 0 12px 28px',
-                        padding: '14px 16px',
-                        background: '#ffffff',
-                        borderRadius: '0 0 12px 12px',
-                        borderLeft: '3px solid #008751',
-                        borderRight: '1px solid #e2e8f0',
-                        borderBottom: '1px solid #e2e8f0',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px dashed #e2e8f0' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#008751', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Church size={14} />
-                          <span>CHURCH STANDINGS IN {comp.name.toUpperCase()} ({churchesCount})</span>
-                        </span>
-                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                          Click group header to collapse
-                        </span>
-                      </div>
-
-                      {churchesCount === 0 ? (
-                        <div style={{ fontSize: '0.84rem', color: '#64748b', fontStyle: 'italic', padding: '8px 0', textAlign: 'center' }}>
-                          No churches currently assigned under this group.
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {comp.churches?.map((church, cIdx) => {
-                            const cRank = cIdx === 0 ? '🥇' : cIdx === 1 ? '🥈' : cIdx === 2 ? '🥉' : `#${cIdx + 1}`;
-                            return (
-                              <div
-                                key={church.id}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justify: 'space-between',
-                                  padding: '10px 14px',
-                                  background: '#f8fafc',
-                                  borderRadius: '8px',
-                                  border: '1px solid #f1f5f9',
-                                  gap: '12px',
-                                }}
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#475569', minWidth: '28px' }}>
-                                    {cRank}
-                                  </span>
-                                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.88rem' }}>
-                                        {church.name}
+                          {churchesCount === 0 || !filteredChurches || filteredChurches.length === 0 ? (
+                            <div style={{ fontSize: '0.84rem', color: '#64748b', fontStyle: 'italic', padding: '8px 0', textAlign: 'center' }}>
+                              No matching churches found under this group.
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {filteredChurches.map((church) => {
+                                const originalCIdx = comp.churches?.findIndex((c) => c.id === church.id) ?? -1;
+                                const cRank = originalCIdx === 0 ? '🥇' : originalCIdx === 1 ? '🥈' : originalCIdx === 2 ? '🥉' : `#${originalCIdx + 1}`;
+                                return (
+                                  <div
+                                    key={church.id}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justify: 'space-between',
+                                      padding: '10px 14px',
+                                      background: '#f8fafc',
+                                      borderRadius: '8px',
+                                      border: '1px solid #f1f5f9',
+                                      gap: '12px',
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#475569', minWidth: '28px' }}>
+                                        {cRank}
                                       </span>
-                                      {church.code && (
-                                        <span style={{ color: '#64748b', fontWeight: '500', fontSize: '0.78rem' }}>
-                                          ({church.code})
-                                        </span>
-                                      )}
-                                      {church.isTargetExceeded && (
-                                        <span className="exceeded-tag" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
-                                          EXCEEDED
-                                        </span>
-                                      )}
+                                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.88rem' }}>
+                                            {church.name}
+                                          </span>
+                                          {church.code && (
+                                            <span style={{ color: '#64748b', fontWeight: '500', fontSize: '0.78rem' }}>
+                                              ({church.code})
+                                            </span>
+                                          )}
+                                          {church.isTargetExceeded && (
+                                            <span className="exceeded-tag" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                                              EXCEEDED
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="child-progress-track" style={{ height: '6px', marginTop: '6px', width: '100%', maxWidth: '280px' }}>
+                                          <div
+                                            className="child-progress-fill"
+                                            style={{ width: `${Math.min(100, church.percentage)}%` }}
+                                          />
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="child-progress-track" style={{ height: '6px', marginTop: '6px', width: '100%', maxWidth: '280px' }}>
-                                      <div
-                                        className="child-progress-fill"
-                                        style={{ width: `${Math.min(100, church.percentage)}%` }}
-                                      />
+
+                                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', minWidth: '90px' }}>
+                                      <span style={{ fontWeight: '800', color: '#008751', fontSize: '0.88rem' }}>
+                                        {church.displayPercentage || `${church.percentage}%`}
+                                      </span>
+                                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                        {church.soulsWon.toLocaleString()} / {church.target > 0 ? church.target.toLocaleString() : 'Not Set'}
+                                      </span>
                                     </div>
                                   </div>
-                                </div>
-
-                                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', minWidth: '90px' }}>
-                                  <span style={{ fontWeight: '800', color: '#008751', fontSize: '0.88rem' }}>
-                                    {church.displayPercentage || `${church.percentage}%`}
-                                  </span>
-                                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                    {church.soulsWon.toLocaleString()} / {church.target > 0 ? church.target.toLocaleString() : 'Not Set'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            );
+          })()
         )}
       </div>
 
