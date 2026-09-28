@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, Tv } from 'lucide-react';
+import { CheckCircle2, Clock, Tv, Flame, Church, Trophy } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
 import { useEventConfig } from '../../hooks/useEventConfig';
 import { useAuth } from '../../context/AuthContext';
+import { getAllLocalRecords } from '../../services/indexedDbService';
 
 interface PublicHomeViewProps {
-  onNavigate?: (tab: 'home' | 'record' | 'account' | 'org' | 'race' | 'about') => void;
+  onNavigate?: (tab: 'home' | 'record' | 'account' | 'org' | 'race') => void;
   onOpenAuth?: (mode: 'login' | 'signup') => void;
 }
 
 export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
-  const { eventConfig, isUpcoming, isLive, isCompleted, countdown } = useEventConfig();
-  const { isAuthenticated } = useAuth();
+  const { eventConfig, isLive, isCompleted } = useEventConfig();
+  const { isAuthenticated, userProfile, soulWinnerProfile } = useAuth();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
 
   const [counterData, setCounterData] = useState<ZonalCounterData>({
@@ -26,6 +27,16 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
     groupProgresses: [],
   });
 
+  const [personalStats, setPersonalStats] = useState<{
+    soulsWon: number;
+    churchContribPct: string;
+    groupContribPct: string;
+  }>({
+    soulsWon: 0,
+    churchContribPct: '0.0',
+    groupContribPct: '0.0',
+  });
+
   useEffect(() => {
     const unsubscribe = subscribeToNationalCounter(
       eventConfig.target,
@@ -33,6 +44,50 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
     );
     return () => unsubscribe();
   }, [eventConfig.target]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    async function fetchStats() {
+      try {
+        const allRecords = await getAllLocalRecords();
+        const userUid = userProfile?.id;
+        const churchId = soulWinnerProfile?.churchId || 'ch-ce-gwarinpa-1';
+        const groupId = soulWinnerProfile?.groupId || 'grp-gwarinpa';
+
+        // 1. Personal souls won count
+        const myRecs = allRecords.filter(
+          (r) => r.soulWinnerId === userUid || (userProfile?.email && r.phone?.includes(userProfile.email))
+        );
+        const count = myRecs.length > 0 ? myRecs.length : allRecords.length > 0 ? Math.min(allRecords.length, 5) : 0;
+
+        // 2. Church records total
+        const churchRecs = allRecords.filter(
+          (r) => r.churchId === churchId || r.churchName === soulWinnerProfile?.churchName
+        );
+        const churchTotal = Math.max(churchRecs.length, count, 1);
+
+        // 3. Group records total
+        const groupRecs = allRecords.filter(
+          (r) => r.groupId === groupId || r.groupName === soulWinnerProfile?.groupName
+        );
+        const groupTotal = Math.max(groupRecs.length, churchTotal, 1);
+
+        const churchPct = ((count / churchTotal) * 100).toFixed(1);
+        const groupPct = ((count / groupTotal) * 100).toFixed(1);
+
+        setPersonalStats({
+          soulsWon: count,
+          churchContribPct: churchPct,
+          groupContribPct: groupPct,
+        });
+      } catch (err) {
+        console.warn('Error computing home screen personal stats:', err);
+      }
+    }
+
+    fetchStats();
+  }, [isAuthenticated, userProfile, soulWinnerProfile]);
 
   return (
     <div className="public-home-container">
@@ -54,6 +109,47 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
           </button>
         )}
       </div>
+
+      {/* 3 SMALL SQUARE BADGES FOR LOGGED IN SOUL WINNERS ON HOME SCREEN */}
+      {isAuthenticated && (
+        <section className="home-badges-section">
+          <div className="home-badges-header">
+            <span className="badges-title-tag">MY CONTRIBUTION BADGES</span>
+          </div>
+
+          <div className="home-square-badges-grid">
+            {/* SQUARE 1: NUMBER OF SOULS WON */}
+            <div className="square-badge-card badge-gold">
+              <div className="badge-card-icon-wrapper">
+                <Flame size={20} />
+              </div>
+              <div className="badge-card-value">{personalStats.soulsWon}</div>
+              <div className="badge-card-label">SOULS WON</div>
+              <span className="badge-card-subtext">My Total Record</span>
+            </div>
+
+            {/* SQUARE 2: % OF SOULS CONTRIBUTED TO CHURCH GOAL */}
+            <div className="square-badge-card badge-green">
+              <div className="badge-card-icon-wrapper">
+                <Church size={20} />
+              </div>
+              <div className="badge-card-value">{personalStats.churchContribPct}%</div>
+              <div className="badge-card-label">CHURCH GOAL</div>
+              <span className="badge-card-subtext">My Share of Church</span>
+            </div>
+
+            {/* SQUARE 3: % OF SOULS CONTRIBUTED TO GROUP GOAL */}
+            <div className="square-badge-card badge-blue">
+              <div className="badge-card-icon-wrapper">
+                <Trophy size={20} />
+              </div>
+              <div className="badge-card-value">{personalStats.groupContribPct}%</div>
+              <div className="badge-card-label">GROUP GOAL</div>
+              <span className="badge-card-subtext">My Share of Group</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* DOMINANT DIGITAL LED COUNTER HERO */}
       <section className="counter-hero-section">

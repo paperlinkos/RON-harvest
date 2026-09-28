@@ -3360,6 +3360,127 @@ select {
   }
 }
 
+/* HOME SCREEN 3 SMALL SQUARE BADGES FOR SOUL WINNERS */
+.home-badges-section {
+  width: 100%;
+  margin-top: 14px;
+  margin-bottom: 20px;
+}
+
+.home-badges-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.badges-title-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #FFD700;
+  text-transform: uppercase;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.home-square-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.square-badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 6px;
+  border-radius: 14px;
+  background: rgba(13, 31, 24, 0.85);
+  border: 1px solid rgba(0, 135, 81, 0.3);
+  backdrop-filter: blur(8px);
+  aspect-ratio: 1 / 1;
+  min-height: 105px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.square-badge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.badge-gold {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.08) 0%, rgba(13, 31, 24, 0.95) 100%);
+}
+
+.badge-gold .badge-icon-wrapper {
+  color: #FFD700;
+}
+
+.badge-gold .badge-card-value {
+  color: #FFD700;
+}
+
+.badge-green {
+  border-color: rgba(0, 135, 81, 0.4);
+  background: linear-gradient(145deg, rgba(0, 135, 81, 0.12) 0%, rgba(13, 31, 24, 0.95) 100%);
+}
+
+.badge-green .badge-icon-wrapper {
+  color: #008751;
+}
+
+.badge-green .badge-card-value {
+  color: #4ade80;
+}
+
+.badge-blue {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.12) 0%, rgba(13, 31, 24, 0.95) 100%);
+}
+
+.badge-blue .badge-icon-wrapper {
+  color: #60a5fa;
+}
+
+.badge-blue .badge-card-value {
+  color: #60a5fa;
+}
+
+.badge-card-icon-wrapper {
+  margin-bottom: 4px;
+}
+
+.badge-card-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.badge-card-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.badge-card-subtext {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
 
 
 
