@@ -47,50 +47,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
   variant = 'classic',
 }) => {
   if (variant === 'barChart') {
-    // Check if total actual souls won is 0. If so, simulate top 3 groups across the 3 color tiers for visual demonstration
-    const hasRealActivity = competitors.some((c) => c.soulsWon > 0);
-
-    const displayCompetitors = competitors.map((comp, idx) => {
-      if (!hasRealActivity) {
-        // Simulation demo values:
-        // Group #1 -> 85% (Bright Green)
-        // Group #2 -> 60% (Yellow)
-        // Group #3 -> 25% (Red)
-        // Rest -> 10% or less (Red)
-        let simPercentage = 0;
-        let simSoulsWon = 0;
-        const target = comp.target > 0 ? comp.target : 1000;
-
-        if (idx === 0) {
-          simPercentage = 85;
-          simSoulsWon = Math.round(target * 0.85);
-        } else if (idx === 1) {
-          simPercentage = 60;
-          simSoulsWon = Math.round(target * 0.60);
-        } else if (idx === 2) {
-          simPercentage = 25;
-          simSoulsWon = Math.round(target * 0.25);
-        } else {
-          simPercentage = Math.max(0, 20 - idx * 2);
-          simSoulsWon = Math.round(target * (simPercentage / 100));
-        }
-
-        return {
-          ...comp,
-          percentage: simPercentage,
-          soulsWon: simSoulsWon,
-          target,
-          displayPercentage: `${simPercentage}%`,
-          normalizedProgress: simPercentage / 100,
-          isSimulated: true,
-        };
-      }
-
-      return {
-        ...comp,
-        isSimulated: false,
-      };
-    });
+    const displayCompetitors = competitors;
 
     return (
       <div className="race-container bar-chart-variant">
@@ -148,11 +105,6 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
               <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#00ff87', letterSpacing: '0.05em' }}>
                 FINISH LINE • 100% TARGET GOAL
               </span>
-              {!hasRealActivity && (
-                <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255, 215, 0, 0.15)', color: '#FFD700', border: '1px solid rgba(255, 215, 0, 0.3)', marginLeft: 'auto' }}>
-                  SIMULATION DEMO MODE
-                </span>
-              )}
             </div>
 
             {/* Grid Chart Columns Area for ALL Groups */}
