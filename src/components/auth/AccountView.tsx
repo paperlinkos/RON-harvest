@@ -148,7 +148,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
               <span className="node-value">{soulWinnerProfile.zoneName || soulWinnerProfile.zoneId || 'Abuja Zone 1'}</span>
             </div>
             <div className="hierarchy-node">
-              <span className="node-label">GROUP:</span>
+              <span className="node-label">GROUP / SUB-GROUP:</span>
               <span className="node-value">{soulWinnerProfile.groupName || soulWinnerProfile.groupId || 'Gwarinpa Group'}</span>
             </div>
             <div className="hierarchy-node node-highlight">
