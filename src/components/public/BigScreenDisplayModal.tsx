@@ -475,7 +475,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                   );
                 })()
               )}
-            </div>     </div>
+            </div>
           </div>
         )}
       </div>
