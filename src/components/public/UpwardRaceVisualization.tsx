@@ -60,7 +60,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
               </h3>
             </div>
             <p className="race-subtitle" style={{ color: '#94a3b8', marginTop: '4px' }}>
-              Real-time vertical bar representation. Colors reflect target thresholds: <span style={{ color: '#ff453a', fontWeight: '800' }}>&lt;50% Red</span> • <span style={{ color: '#ffd60a', fontWeight: '800' }}>50–74% Yellow</span> • <span style={{ color: '#00ff87', fontWeight: '800' }}>75%+ Bright Green</span>.
+              Real-time vertical bar representation of Groups climbing toward their soul targets.
             </p>
           </div>
 
