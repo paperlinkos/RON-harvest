@@ -1,6 +1,6 @@
 import { getAllLocalRecords } from './indexedDbService';
 import { getGroups, getChurches, getPCFs } from './organizationService';
-import { getTargets } from './targetService';
+import { getTargets, getOfficialTarget } from './targetService';
 import { getLocalEventConfig } from './eventService';
 import { getUserScope, isAuthorizedForOrg, type UserScope } from './roleScopeService';
 import { calculateOrganizationProgress } from './targetProgressEngine';
@@ -97,8 +97,9 @@ export async function getDashboardViewData(
     (t) => t.level === activeLevel && t.organizationId === activeOrgId && t.status === 'active'
   );
   
-  // Default target fallback if not custom set
-  const defaultTarget = activeLevel === 'zone' ? (getLocalEventConfig().target || 40000) : activeLevel === 'group' ? 5000 : 1000;
+  // Default target fallback if not custom set — query official PDF target map first
+  const officialTarget = getOfficialTarget(activeLevel, activeOrgId);
+  const defaultTarget = officialTarget ?? (activeLevel === 'zone' ? (getLocalEventConfig().target || 40000) : activeLevel === 'group' ? 2000 : 250);
   const target = targetObj ? targetObj.target : defaultTarget;
 
   const mainProgress = calculateOrganizationProgress({
@@ -121,14 +122,15 @@ export async function getDashboardViewData(
   if (activeLevel === 'zone') {
     children = groups.map((g) => {
       const gRecords = records.filter((r) => r.groupId === g.id);
-      const gTargetObj = targets.find((t) => t.level === 'group' && t.organizationId === g.id);
+      const gTargetObj = targets.find((t) => t.level === 'group' && t.organizationId === g.id && t.status === 'active');
+      const gTarget = gTargetObj ? gTargetObj.target : (getOfficialTarget('group', g.id) ?? 2000);
       const prog = calculateOrganizationProgress({
         organizationId: g.id,
         organizationName: g.name,
         organizationCode: g.code,
         level: 'group',
         actual: gRecords.length,
-        target: gTargetObj ? gTargetObj.target : 5000,
+        target: gTarget,
       });
       return { ...prog, childCount: churches.filter((c) => c.groupId === g.id).length };
     });
@@ -136,14 +138,15 @@ export async function getDashboardViewData(
     const childChurches = churches.filter((c) => c.groupId === activeOrgId);
     children = childChurches.map((c) => {
       const cRecords = records.filter((r) => r.churchId === c.id);
-      const cTargetObj = targets.find((t) => t.level === 'church' && t.organizationId === c.id);
+      const cTargetObj = targets.find((t) => t.level === 'church' && t.organizationId === c.id && t.status === 'active');
+      const cTarget = cTargetObj ? cTargetObj.target : (getOfficialTarget('church', c.id) ?? 250);
       const prog = calculateOrganizationProgress({
         organizationId: c.id,
         organizationName: c.name,
         organizationCode: c.code,
         level: 'church',
         actual: cRecords.length,
-        target: cTargetObj ? cTargetObj.target : 1000,
+        target: cTarget,
       });
       return { ...prog, childCount: cRecords.length };
     });

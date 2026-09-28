@@ -67,7 +67,7 @@ export const DuplicateResolutionsView: React.FC = () => {
 
   const handleMarkAsUnique = async (primaryId: string, dupId: string, name: string) => {
     try {
-      resolveMarkAsUnique(primaryId, dupId);
+      await resolveMarkAsUnique(primaryId, dupId);
       setActionSuccess(`Marked "${name}" entries as distinct unique individuals.`);
       await runScan();
     } catch (err) {

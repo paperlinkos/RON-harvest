@@ -44,7 +44,7 @@ const MainContent: React.FC = () => {
     manualSync,
   } = useSoulRecords();
 
-  const { isAuthenticated, userProfile, role } = useAuth();
+  const { isAuthenticated, userProfile, role, isRoleVerified } = useAuth();
 
   const { eventConfig } = useEventConfig();
 
@@ -116,7 +116,7 @@ const MainContent: React.FC = () => {
             />
           )}
 
-          {activeTab === 'race' && role !== 'soulWinner' && (
+          {activeTab === 'race' && role !== 'soulWinner' && isRoleVerified && (
             <UpwardRaceView />
           )}
 
@@ -179,11 +179,11 @@ const MainContent: React.FC = () => {
             </>
           )}
 
-          {activeTab === 'eventControl' && userProfile?.role === 'superAdmin' && (
+          {activeTab === 'eventControl' && userProfile?.role === 'superAdmin' && isRoleVerified && (
             <EventControlView />
           )}
 
-          {activeTab === 'importData' && userProfile?.role === 'superAdmin' && (
+          {activeTab === 'importData' && userProfile?.role === 'superAdmin' && isRoleVerified && (
             <BulkImportView />
           )}
 
@@ -191,7 +191,7 @@ const MainContent: React.FC = () => {
             <AccountView onOpenAuth={handleOpenAuth} />
           )}
 
-          {activeTab === 'org' && userProfile?.role === 'superAdmin' && (
+          {activeTab === 'org' && userProfile?.role === 'superAdmin' && isRoleVerified && (
             <div className="admin-container">
               <div className="admin-subtabs">
                 <button
@@ -241,8 +241,8 @@ const MainContent: React.FC = () => {
       {/* PWA Banner */}
       <PwaInstallPrompt />
 
-      {/* Dev Role Switcher */}
-      <DevRoleSwitcher />
+      {/* Dev Role Switcher — ONLY shown in development builds, never in production */}
+      {import.meta.env.DEV && <DevRoleSwitcher />}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import type { Target, TargetLevel, OrganizationProgress } from '../types/target';
 import type { Group, Church } from '../types/organization';
+import { getOfficialTarget } from './targetService';
 
 export interface CalculateProgressInput {
   organizationId: string;
@@ -56,13 +57,14 @@ export function calculateOrganizationProgress(input: CalculateProgressInput): Or
 }
 
 /**
- * Calculates aggregate progress across groups for the Upward Race
+ * Calculates aggregate progress across groups for the Upward Race.
+ * Checks targetsList first, then falls back to the exact official PDF target for that specific group.
  */
 export function calculateGroupRaceProgress(
   records: Array<{ groupId?: string }>,
   groups: Group[],
   targetsList: Target[],
-  defaultGroupTarget: number = 5000
+  defaultGroupTarget?: number
 ): OrganizationProgress[] {
   // 1. Calculate actual soul count per group ID from valid records
   const groupActualCounts = new Map<string, number>();
@@ -84,7 +86,7 @@ export function calculateGroupRaceProgress(
   // 3. Calculate progress for each group
   const results: OrganizationProgress[] = groups.map((g) => {
     const actual = groupActualCounts.get(g.id) || 0;
-    const groupTarget = targetsMap.get(g.id) ?? defaultGroupTarget;
+    const groupTarget = targetsMap.get(g.id) ?? getOfficialTarget('group', g.id) ?? defaultGroupTarget ?? 1000;
 
     return calculateOrganizationProgress({
       organizationId: g.id,
@@ -103,14 +105,15 @@ export function calculateGroupRaceProgress(
 }
 
 /**
- * Calculates aggregate progress across churches (optionally filtered by groupId)
+ * Calculates aggregate progress across churches (optionally filtered by groupId).
+ * Checks targetsList first, then falls back to the exact official PDF target for that specific church.
  */
 export function calculateChurchRaceProgress(
   records: Array<{ groupId?: string; churchId?: string }>,
   churches: Church[],
   targetsList: Target[],
   groupId?: string,
-  defaultChurchTarget: number = 1000
+  defaultChurchTarget?: number
 ): OrganizationProgress[] {
   const targetChurches = groupId ? churches.filter((c) => c.groupId === groupId) : churches;
 
@@ -130,7 +133,7 @@ export function calculateChurchRaceProgress(
 
   const results: OrganizationProgress[] = targetChurches.map((c) => {
     const actual = churchActualCounts.get(c.id) || 0;
-    const churchTarget = targetsMap.get(c.id) ?? defaultChurchTarget;
+    const churchTarget = targetsMap.get(c.id) ?? getOfficialTarget('church', c.id) ?? defaultChurchTarget ?? 100;
 
     return calculateOrganizationProgress({
       organizationId: c.id,

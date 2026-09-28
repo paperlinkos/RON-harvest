@@ -28,6 +28,12 @@ interface AuthContextType {
   isActiveSoulWinner: boolean;
   isPendingAssignment: boolean;
   isLoading: boolean;
+  /**
+   * True only after Firebase onAuthStateChanged has resolved and the live
+   * Firestore profile has been fetched. Admin UI gates MUST check this before
+   * rendering privileged views — prevents localStorage-role tampering.
+   */
+  isRoleVerified: boolean;
   signup: (
     name: string,
     email: string,
@@ -50,6 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [soulWinnerProfile, setSoulWinnerProfile] = useState<SoulWinnerProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Only flipped to true after a live Firebase auth + Firestore profile fetch.
+  // localStorage-cached profiles are loaded for UX (name, email) but this
+  // flag stays false until Firebase confirms the real role.
+  const [isRoleVerified, setIsRoleVerified] = useState<boolean>(false);
 
   const loadProfiles = async (uid: string) => {
     const [uProf, swProf] = await Promise.all([
@@ -78,11 +88,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         setCurrentUser(user);
         await loadProfiles(user.uid);
+        // Role is now confirmed from live Firestore — safe to grant privileged UI
+        setIsRoleVerified(true);
       } else if (!localStorage.getItem('ron_user_profile')) {
         setCurrentUser(null);
         setUserProfile(null);
         setSoulWinnerProfile(null);
         clearCachedProfiles();
+        setIsRoleVerified(false);
+      } else {
+        // Offline with cached profile — role is NOT verified until Firebase confirms
+        setIsRoleVerified(false);
       }
       setIsLoading(false);
     });
@@ -233,6 +249,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isActiveSoulWinner,
         isPendingAssignment,
         isLoading,
+        isRoleVerified,
         signup,
         login,
         logout,

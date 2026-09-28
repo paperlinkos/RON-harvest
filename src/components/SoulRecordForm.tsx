@@ -238,6 +238,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
               onChange={handleChange}
               placeholder="Enter name"
               disabled={isSubmitting}
+              maxLength={100}
               className={`form-input ${errors.name ? 'input-error' : ''}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -266,6 +267,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
               onChange={handleChange}
               placeholder="Enter phone number"
               disabled={isSubmitting}
+              maxLength={20}
               className={`form-input ${errors.phone ? 'input-error' : ''}`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -294,6 +296,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
               onChange={handleChange}
               placeholder="e.g. Wuse Market, Gwarinpa, Church"
               disabled={isSubmitting}
+              maxLength={200}
               className={`form-input ${errors.location ? 'input-error' : ''}`}
             />
           </div>

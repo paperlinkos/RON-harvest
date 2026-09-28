@@ -113,7 +113,8 @@ export function useSoulRecords() {
         churchId: soulWinnerProfile?.churchId,
         groupId: soulWinnerProfile?.groupId,
         zoneId: soulWinnerProfile?.zoneId,
-        eventId: 'ron-2026-oct1',
+        // Reference the live event config rather than a hardcoded string
+        eventId: eventConfig.id,
       };
 
       // 1. Save locally immediately with organizational references intact

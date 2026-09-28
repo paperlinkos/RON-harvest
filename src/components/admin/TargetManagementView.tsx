@@ -9,9 +9,16 @@ import {
   Users,
   Check,
   Filter,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getTargets, saveTarget, saveMultipleTargets } from '../../services/targetService';
+import {
+  getTargets,
+  saveTarget,
+  saveMultipleTargets,
+  getOfficialTarget,
+  resetTargetsToOfficialDefaults,
+} from '../../services/targetService';
 import { getGroups, getChurches, getPCFs } from '../../services/organizationService';
 import { getAllLocalRecords } from '../../services/indexedDbService';
 import { REACH_OUT_NIGERIA_EVENT } from '../../config/eventConfig';
@@ -73,18 +80,20 @@ export const TargetManagementView: React.FC = () => {
       setPcfs(pList);
       setRecords(rList);
 
-      // Populate initial drafts from active targets
+      // Populate initial drafts from active targets or official PDF targets
       const gDrafts: Record<string, number> = {};
       gList.forEach((g) => {
         const found = tList.find((t) => t.level === 'group' && t.organizationId === g.id && t.status === 'active');
-        gDrafts[g.id] = found ? found.target : 1000;
+        const official = getOfficialTarget('group', g.id);
+        gDrafts[g.id] = found ? found.target : (official ?? 1000);
       });
       setGroupDrafts(gDrafts);
 
       const cDrafts: Record<string, number> = {};
       cList.forEach((c) => {
         const found = tList.find((t) => t.level === 'church' && t.organizationId === c.id && t.status === 'active');
-        cDrafts[c.id] = found ? found.target : 250;
+        const official = getOfficialTarget('church', c.id);
+        cDrafts[c.id] = found ? found.target : (official ?? 100);
       });
       setChurchDrafts(cDrafts);
 
@@ -304,12 +313,89 @@ export const TargetManagementView: React.FC = () => {
     }
   };
 
+  // Handler: Reset all targets to official PDF defaults
+  const handleResetToOfficialDefaults = async () => {
+    if (!window.confirm('Are you sure you want to reset all Group and Church targets to the official values from the PDF document? This will overwrite any custom targets and sync across the entire zone.')) {
+      return;
+    }
+    setIsSaving(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const resetList = await resetTargetsToOfficialDefaults(userProfile?.id || 'superAdmin');
+      setTargets(resetList);
+
+      const gDrafts: Record<string, number> = {};
+      groups.forEach((g) => {
+        const found = resetList.find((t) => t.level === 'group' && t.organizationId === g.id && t.status === 'active');
+        gDrafts[g.id] = found ? found.target : (getOfficialTarget('group', g.id) ?? 1000);
+      });
+      setGroupDrafts(gDrafts);
+
+      const cDrafts: Record<string, number> = {};
+      churches.forEach((c) => {
+        const found = resetList.find((t) => t.level === 'church' && t.organizationId === c.id && t.status === 'active');
+        cDrafts[c.id] = found ? found.target : (getOfficialTarget('church', c.id) ?? 100);
+      });
+      setChurchDrafts(cDrafts);
+
+      setSuccessMsg(`Successfully restored all 20 Groups and 98 Churches to their official targets from the PDF document! Total: ${totalChurchTargetAllocated.toLocaleString()} souls.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Milestone progression color helper (The ONLY colored elements in the table)
+  const getMilestoneProgressStyle = (pct: number) => {
+    if (pct >= 100) {
+      return {
+        background: '#ecfdf5',
+        color: '#065f46',
+        border: '1px solid #6ee7b7',
+        badge: '👑',
+      };
+    }
+    if (pct >= 75) {
+      return {
+        background: '#faf5ff',
+        color: '#6b21a8',
+        border: '1px solid #d8b4fe',
+        badge: '🥇',
+      };
+    }
+    if (pct >= 50) {
+      return {
+        background: '#eff6ff',
+        color: '#1e40af',
+        border: '1px solid #93c5fd',
+        badge: '🥈',
+      };
+    }
+    if (pct >= 25) {
+      return {
+        background: '#fffbeb',
+        color: '#92400e',
+        border: '1px solid #fcd34d',
+        badge: '🥉',
+      };
+    }
+    return {
+      background: '#f1f5f9',
+      color: '#475569',
+      border: '1px solid #cbd5e1',
+      badge: '',
+    };
+  };
+
   if (!isSuperAdmin) {
     return (
-      <div className="account-card empty-card">
-        <AlertCircle size={32} className="text-gold" />
-        <h3 className="account-title">Target Management Restricted</h3>
-        <p className="account-lead">
+      <div className="account-card empty-card" style={{ background: '#ffffff', border: '1px solid #e2e8f0' }}>
+        <AlertCircle size={32} style={{ color: '#0f172a' }} />
+        <h3 className="account-title" style={{ color: '#0f172a' }}>Target Management Restricted</h3>
+        <p className="account-lead" style={{ color: '#64748b' }}>
           Managing organizational targets is reserved for SuperAdmin accounts only.
         </p>
       </div>
@@ -336,117 +422,203 @@ export const TargetManagementView: React.FC = () => {
   });
 
   return (
-    <div className="account-card" style={{ maxWidth: '1150px', margin: '0 auto' }}>
+    <div className="account-card" style={{ maxWidth: '1150px', margin: '0 auto', background: '#ffffff', border: '1px solid #e2e8f0' }}>
       {/* Header */}
-      <div className="form-header" style={{ marginBottom: '20px' }}>
-        <TargetIcon size={26} className="text-green-accent" />
+      <div className="form-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a', border: '1px solid #e2e8f0' }}>
+          <TargetIcon size={22} />
+        </div>
         <div>
-          <h2 className="form-title">TARGET CONFIGURATION MATRIX</h2>
-          <p className="form-lead">
+          <h2 className="form-title" style={{ color: '#0f172a', fontWeight: '800', margin: 0, fontSize: '1.25rem', letterSpacing: '-0.01em' }}>
+            TARGET CONFIGURATION MATRIX
+          </h2>
+          <p className="form-lead" style={{ color: '#64748b', margin: '3px 0 0 0', fontSize: '0.85rem' }}>
             Manage target soul-winning goals for the Zone, Groups, Churches, and PCFs with live progress tracking and bulk editing.
           </p>
         </div>
       </div>
 
-      {/* TOP SUMMARY STATS BAR */}
+      {/* TOP SUMMARY STATS BAR (PURE MONOCHROME) */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '12px',
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '10px',
-          padding: '16px',
-          marginBottom: '20px',
+          gap: '14px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '18px 20px',
+          marginBottom: '24px',
         }}
       >
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '700' }}>TOTAL ZONAL TARGET</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#00ff87' }}>
-            {zonalTargetGoal.toLocaleString()} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>SOULS</span>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '700', letterSpacing: '0.04em' }}>TOTAL ZONAL TARGET</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#0f172a', marginTop: '3px' }}>
+            {zonalTargetGoal.toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>SOULS</span>
           </div>
         </div>
 
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '700' }}>SUM OF GROUP TARGETS</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ffd60a' }}>
-            {totalGroupTargetAllocated.toLocaleString()} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>SOULS</span>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '700', letterSpacing: '0.04em' }}>SUM OF GROUP TARGETS</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#0f172a', marginTop: '3px' }}>
+            {totalGroupTargetAllocated.toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>SOULS</span>
           </div>
-          <span style={{ fontSize: '0.7rem', color: totalGroupTargetAllocated >= zonalTargetGoal ? '#4ade80' : '#f87171' }}>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
             {((totalGroupTargetAllocated / zonalTargetGoal) * 100).toFixed(1)}% of Zonal Target
           </span>
         </div>
 
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '700' }}>SUM OF CHURCH TARGETS</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#60a5fa' }}>
-            {totalChurchTargetAllocated.toLocaleString()} <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>SOULS</span>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '700', letterSpacing: '0.04em' }}>SUM OF CHURCH TARGETS</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#0f172a', marginTop: '3px' }}>
+            {totalChurchTargetAllocated.toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>SOULS</span>
           </div>
-          <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
             Across {churches.length} active churches
           </span>
         </div>
 
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '700' }}>TOTAL SOULS WON (LIVE)</span>
-          <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ffffff' }}>
-            {records.length.toLocaleString()} <span style={{ fontSize: '0.8rem', color: '#00ff87' }}>SOULS</span>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '700', letterSpacing: '0.04em' }}>TOTAL SOULS WON (LIVE)</span>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#0f172a', marginTop: '3px' }}>
+            {records.length.toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>SOULS</span>
           </div>
-          <span style={{ fontSize: '0.7rem', color: '#4ade80' }}>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
             {((records.length / zonalTargetGoal) * 100).toFixed(1)}% achieved
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="error-box" style={{ marginBottom: '16px' }}>
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', fontWeight: '600' }}>
           <AlertCircle size={16} />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="success-box" style={{ marginBottom: '16px' }}>
+        <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', color: '#0f172a', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', fontWeight: '600' }}>
           <CheckCircle2 size={16} />
           <span>{successMsg}</span>
         </div>
       )}
 
-      {/* MATRIX SUBTABS */}
-      <div className="admin-subtabs" style={{ marginBottom: '20px' }}>
+      {/* MATRIX SUBTABS & RESTORE BUTTON (MONOCHROME) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', background: '#f1f5f9', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('groups'); setError(null); setSuccessMsg(null); }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.82rem',
+              fontWeight: '700',
+              borderRadius: '7px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: activeTab === 'groups' ? '#0f172a' : 'transparent',
+              color: activeTab === 'groups' ? '#ffffff' : '#475569',
+              boxShadow: activeTab === 'groups' ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Users size={15} /> GROUPS TARGETS ({groups.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('churches'); setError(null); setSuccessMsg(null); }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.82rem',
+              fontWeight: '700',
+              borderRadius: '7px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: activeTab === 'churches' ? '#0f172a' : 'transparent',
+              color: activeTab === 'churches' ? '#ffffff' : '#475569',
+              boxShadow: activeTab === 'churches' ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Building size={15} /> CHURCHES TARGETS ({churches.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('pcfs'); setError(null); setSuccessMsg(null); }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.82rem',
+              fontWeight: '700',
+              borderRadius: '7px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: activeTab === 'pcfs' ? '#0f172a' : 'transparent',
+              color: activeTab === 'pcfs' ? '#ffffff' : '#475569',
+              boxShadow: activeTab === 'pcfs' ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            PCFs TARGETS ({pcfs.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('single'); setError(null); setSuccessMsg(null); }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.82rem',
+              fontWeight: '700',
+              borderRadius: '7px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: activeTab === 'single' ? '#0f172a' : 'transparent',
+              color: activeTab === 'single' ? '#ffffff' : '#475569',
+              boxShadow: activeTab === 'single' ? '0 1px 3px rgba(15,23,42,0.12)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <TargetIcon size={15} /> QUICK SINGLE SETTER
+          </button>
+        </div>
+
         <button
           type="button"
-          onClick={() => { setActiveTab('groups'); setError(null); setSuccessMsg(null); }}
-          className={`subtab-btn ${activeTab === 'groups' ? 'subtab-active' : ''}`}
+          onClick={handleResetToOfficialDefaults}
+          disabled={isSaving}
+          style={{
+            padding: '8px 16px',
+            fontSize: '0.82rem',
+            fontWeight: '700',
+            border: '1px solid #cbd5e1',
+            background: '#ffffff',
+            color: '#0f172a',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderRadius: '8px',
+            cursor: isSaving ? 'not-allowed' : 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          title="Restore all groups and churches to their exact official targets from the PDF document"
         >
-          <Users size={15} className="inline-icon" /> GROUPS TARGETS ({groups.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => { setActiveTab('churches'); setError(null); setSuccessMsg(null); }}
-          className={`subtab-btn ${activeTab === 'churches' ? 'subtab-active' : ''}`}
-        >
-          <Building size={15} className="inline-icon" /> CHURCHES TARGETS ({churches.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => { setActiveTab('pcfs'); setError(null); setSuccessMsg(null); }}
-          className={`subtab-btn ${activeTab === 'pcfs' ? 'subtab-active' : ''}`}
-        >
-          PCFs TARGETS ({pcfs.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => { setActiveTab('single'); setError(null); setSuccessMsg(null); }}
-          className={`subtab-btn ${activeTab === 'single' ? 'subtab-active' : ''}`}
-        >
-          <TargetIcon size={15} className="inline-icon" /> QUICK SINGLE SETTER
+          <RotateCcw size={15} />
+          <span>{isSaving ? 'RESTORING...' : 'RESET TO OFFICIAL PDF TARGETS'}</span>
         </button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '48px', color: '#64748b', fontSize: '0.9rem' }}>
           Loading targets and organizational units...
         </div>
       ) : activeTab === 'groups' ? (
@@ -455,14 +627,21 @@ export const TargetManagementView: React.FC = () => {
           {/* Actions & Search */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ position: 'relative', width: '280px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '11px', color: '#64748b' }} />
               <input
                 type="text"
                 value={groupSearch}
                 onChange={(e) => setGroupSearch(e.target.value)}
                 placeholder="Search Group by name or code..."
-                className="form-input"
-                style={{ paddingLeft: '36px' }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px 8px 36px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontSize: '0.86rem',
+                }}
               />
             </div>
 
@@ -470,54 +649,77 @@ export const TargetManagementView: React.FC = () => {
               type="button"
               onClick={handleSaveAllGroups}
               disabled={isSaving}
-              className="btn-green-accent"
-              style={{ padding: '10px 20px', fontWeight: '800' }}
+              style={{
+                padding: '9px 18px',
+                fontWeight: '700',
+                fontSize: '0.84rem',
+                borderRadius: '8px',
+                border: '1px solid #0f172a',
+                background: '#0f172a',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                opacity: isSaving ? 0.7 : 1,
+                boxShadow: '0 1px 3px rgba(15,23,42,0.15)',
+              }}
             >
-              <Save size={18} />
+              <Save size={16} />
               <span>{isSaving ? 'SAVING GROUPS...' : 'SAVE ALL GROUP TARGETS'}</span>
             </button>
           </div>
 
           {/* Groups Table */}
-          <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}>
+          <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#ffffff' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <th style={{ padding: '12px 16px' }}>GROUP NAME & CODE</th>
-                  <th style={{ padding: '12px 16px' }}>CHURCHES</th>
-                  <th style={{ padding: '12px 16px' }}>SOULS WON</th>
-                  <th style={{ padding: '12px 16px' }}>TARGET GOAL (SOULS)</th>
-                  <th style={{ padding: '12px 16px' }}>PROGRESS</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>ACTION</th>
+                <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>GROUP NAME & CODE</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>CHURCHES</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>OFFICIAL PDF TARGET</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>SOULS WON</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>CURRENT TARGET (SOULS)</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>PROGRESS</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em', textAlign: 'center' }}>ACTION</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredGroups.map((g) => {
                   const currentTarget = groupDrafts[g.id] || 0;
+                  const officialTarget = getOfficialTarget('group', g.id);
+                  const isModified = officialTarget !== undefined && currentTarget !== officialTarget;
                   const actual = groupSoulsWon[g.id] || 0;
                   const pct = currentTarget > 0 ? Math.round((actual / currentTarget) * 100) : 0;
                   const churchCount = churches.filter((c) => c.groupId === g.id).length;
                   const isSaved = savedRowIds[g.id];
+                  const mStyle = getMilestoneProgressStyle(pct);
 
                   return (
                     <tr
                       key={g.id}
                       style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        background: isSaved ? 'rgba(0, 255, 135, 0.08)' : 'transparent',
-                        transition: 'background 0.3s ease',
+                        borderBottom: '1px solid #f1f5f9',
+                        background: isSaved ? '#f8fafc' : 'transparent',
+                        transition: 'background 0.2s ease',
                       }}
                     >
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '700', color: '#ffffff' }}>{g.name}</div>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Code: {g.code}</span>
+                        <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem' }}>{g.name}</div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Code: {g.code}</span>
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#cbd5e1' }}>
+                      <td style={{ padding: '12px 16px', color: '#475569', fontWeight: '500' }}>
                         {churchCount} Churches
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#00ff87', fontWeight: '800' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                          {officialTarget ? officialTarget.toLocaleString() : 'N/A'}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '800' }}>
                         {actual.toLocaleString()}
                       </td>
 
@@ -531,23 +733,46 @@ export const TargetManagementView: React.FC = () => {
                             const val = parseInt(e.target.value, 10) || 0;
                             setGroupDrafts((prev) => ({ ...prev, [g.id]: val }));
                           }}
-                          className="form-input"
-                          style={{ maxWidth: '140px', padding: '6px 10px', fontWeight: '700' }}
+                          style={{
+                            maxWidth: '130px',
+                            padding: '6px 10px',
+                            fontWeight: '700',
+                            color: '#0f172a',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            fontSize: '0.88rem',
+                          }}
                         />
+                        {isModified ? (
+                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '3px', fontWeight: '600' }}>
+                            Custom (PDF: {officialTarget?.toLocaleString()})
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '3px', fontWeight: '600' }}>
+                            Matches PDF
+                          </div>
+                        )}
                       </td>
 
+                      {/* Milestone progression colors only */}
                       <td style={{ padding: '12px 16px' }}>
                         <span
                           style={{
-                            padding: '4px 8px',
-                            borderRadius: '12px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 10px',
+                            borderRadius: '16px',
                             fontSize: '0.78rem',
                             fontWeight: '800',
-                            background: pct >= 75 ? 'rgba(0, 255, 135, 0.2)' : pct >= 50 ? 'rgba(255, 204, 0, 0.2)' : 'rgba(255, 69, 58, 0.2)',
-                            color: pct >= 75 ? '#00ff87' : pct >= 50 ? '#ffd60a' : '#ff453a',
+                            background: mStyle.background,
+                            color: mStyle.color,
+                            border: mStyle.border,
                           }}
                         >
-                          {pct}%
+                          {mStyle.badge && <span style={{ fontSize: '0.85rem' }}>{mStyle.badge}</span>}
+                          <span>{pct}%</span>
                         </span>
                       </td>
 
@@ -555,12 +780,25 @@ export const TargetManagementView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleSaveSingleRow('group', g.id, currentTarget)}
-                          className={isSaved ? 'btn-green-accent' : 'secondary-button'}
-                          style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                          style={{
+                            padding: '6px 14px',
+                            fontSize: '0.78rem',
+                            fontWeight: '700',
+                            borderRadius: '6px',
+                            border: '1px solid',
+                            borderColor: isSaved ? '#0f172a' : '#cbd5e1',
+                            background: isSaved ? '#0f172a' : '#ffffff',
+                            color: isSaved ? '#ffffff' : '#0f172a',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.15s ease',
+                          }}
                           title="Save this group's target"
                         >
                           {isSaved ? <Check size={14} /> : <Save size={14} />}
-                          <span style={{ marginLeft: '4px' }}>{isSaved ? 'Saved' : 'Save'}</span>
+                          <span>{isSaved ? 'Saved' : 'Save'}</span>
                         </button>
                       </td>
                     </tr>
@@ -577,24 +815,38 @@ export const TargetManagementView: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <div style={{ position: 'relative', width: '240px' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '11px', color: '#64748b' }} />
                 <input
                   type="text"
                   value={churchSearch}
                   onChange={(e) => setChurchSearch(e.target.value)}
                   placeholder="Search Church name..."
-                  className="form-input"
-                  style={{ paddingLeft: '36px' }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 36px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontSize: '0.86rem',
+                  }}
                 />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Filter size={16} className="text-gold" />
+                <Filter size={16} style={{ color: '#64748b' }} />
                 <select
                   value={selectedGroupFilter}
                   onChange={(e) => setSelectedGroupFilter(e.target.value)}
-                  className="form-input"
-                  style={{ width: '220px' }}
+                  style={{
+                    width: '240px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontSize: '0.86rem',
+                  }}
                 >
                   <option value="all">All Groups ({churches.length} churches)</option>
                   {groups.map((g) => (
@@ -610,54 +862,78 @@ export const TargetManagementView: React.FC = () => {
               type="button"
               onClick={handleSaveAllChurches}
               disabled={isSaving}
-              className="btn-green-accent"
-              style={{ padding: '10px 20px', fontWeight: '800' }}
+              style={{
+                padding: '9px 18px',
+                fontWeight: '700',
+                fontSize: '0.84rem',
+                borderRadius: '8px',
+                border: '1px solid #0f172a',
+                background: '#0f172a',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                opacity: isSaving ? 0.7 : 1,
+                boxShadow: '0 1px 3px rgba(15,23,42,0.15)',
+              }}
             >
-              <Save size={18} />
+              <Save size={16} />
               <span>{isSaving ? 'SAVING CHURCHES...' : 'SAVE ALL CHURCH TARGETS'}</span>
             </button>
           </div>
 
           {/* Churches Table */}
-          <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}>
+          <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#ffffff' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <th style={{ padding: '12px 16px' }}>CHURCH NAME</th>
-                  <th style={{ padding: '12px 16px' }}>PARENT GROUP</th>
-                  <th style={{ padding: '12px 16px' }}>SOULS WON</th>
-                  <th style={{ padding: '12px 16px' }}>TARGET GOAL (SOULS)</th>
-                  <th style={{ padding: '12px 16px' }}>PROGRESS</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>ACTION</th>
+                <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>CHURCH NAME</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>PARENT GROUP</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>OFFICIAL PDF TARGET</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>SOULS WON</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>CURRENT TARGET (SOULS)</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>PROGRESS</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em', textAlign: 'center' }}>ACTION</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredChurches.map((c) => {
                   const currentTarget = churchDrafts[c.id] || 0;
+                  const officialTarget = getOfficialTarget('church', c.id);
+                  const isModified = officialTarget !== undefined && currentTarget !== officialTarget;
                   const actual = churchSoulsWon[c.id] || 0;
                   const pct = currentTarget > 0 ? Math.round((actual / currentTarget) * 100) : 0;
                   const parentGroup = groups.find((g) => g.id === c.groupId);
                   const isSaved = savedRowIds[c.id];
+                  const mStyle = getMilestoneProgressStyle(pct);
 
                   return (
                     <tr
                       key={c.id}
                       style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                        background: isSaved ? 'rgba(0, 255, 135, 0.08)' : 'transparent',
-                        transition: 'background 0.3s ease',
+                        borderBottom: '1px solid #f1f5f9',
+                        background: isSaved ? '#f8fafc' : 'transparent',
+                        transition: 'background 0.2s ease',
                       }}
                     >
+                      {/* CHURCH NAME & CODE - BOLD & HIGHLY VISIBLE */}
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '700', color: '#ffffff' }}>{c.name}</div>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Code: {c.code}</span>
+                        <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem' }}>{c.name}</div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Code: {c.code}</span>
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#ffd60a' }}>
+                      <td style={{ padding: '12px 16px', color: '#334155', fontWeight: '600' }}>
                         {parentGroup?.name || 'Unassigned'}
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#00ff87', fontWeight: '800' }}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                          {officialTarget ? officialTarget.toLocaleString() : 'N/A'}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '800' }}>
                         {actual.toLocaleString()}
                       </td>
 
@@ -671,23 +947,46 @@ export const TargetManagementView: React.FC = () => {
                             const val = parseInt(e.target.value, 10) || 0;
                             setChurchDrafts((prev) => ({ ...prev, [c.id]: val }));
                           }}
-                          className="form-input"
-                          style={{ maxWidth: '140px', padding: '6px 10px', fontWeight: '700' }}
+                          style={{
+                            maxWidth: '130px',
+                            padding: '6px 10px',
+                            fontWeight: '700',
+                            color: '#0f172a',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            fontSize: '0.88rem',
+                          }}
                         />
+                        {isModified ? (
+                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '3px', fontWeight: '600' }}>
+                            Custom (PDF: {officialTarget?.toLocaleString()})
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '3px', fontWeight: '600' }}>
+                            Matches PDF
+                          </div>
+                        )}
                       </td>
 
+                      {/* Milestone progression colors only */}
                       <td style={{ padding: '12px 16px' }}>
                         <span
                           style={{
-                            padding: '4px 8px',
-                            borderRadius: '12px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 10px',
+                            borderRadius: '16px',
                             fontSize: '0.78rem',
                             fontWeight: '800',
-                            background: pct >= 75 ? 'rgba(0, 255, 135, 0.2)' : pct >= 50 ? 'rgba(255, 204, 0, 0.2)' : 'rgba(255, 69, 58, 0.2)',
-                            color: pct >= 75 ? '#00ff87' : pct >= 50 ? '#ffd60a' : '#ff453a',
+                            background: mStyle.background,
+                            color: mStyle.color,
+                            border: mStyle.border,
                           }}
                         >
-                          {pct}%
+                          {mStyle.badge && <span style={{ fontSize: '0.85rem' }}>{mStyle.badge}</span>}
+                          <span>{pct}%</span>
                         </span>
                       </td>
 
@@ -695,12 +994,25 @@ export const TargetManagementView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleSaveSingleRow('church', c.id, currentTarget)}
-                          className={isSaved ? 'btn-green-accent' : 'secondary-button'}
-                          style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                          style={{
+                            padding: '6px 14px',
+                            fontSize: '0.78rem',
+                            fontWeight: '700',
+                            borderRadius: '6px',
+                            border: '1px solid',
+                            borderColor: isSaved ? '#0f172a' : '#cbd5e1',
+                            background: isSaved ? '#0f172a' : '#ffffff',
+                            color: isSaved ? '#ffffff' : '#0f172a',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.15s ease',
+                          }}
                           title="Save this church's target"
                         >
                           {isSaved ? <Check size={14} /> : <Save size={14} />}
-                          <span style={{ marginLeft: '4px' }}>{isSaved ? 'Saved' : 'Save'}</span>
+                          <span>{isSaved ? 'Saved' : 'Save'}</span>
                         </button>
                       </td>
                     </tr>
@@ -714,12 +1026,19 @@ export const TargetManagementView: React.FC = () => {
         /* ================= TAB 3: PCF TARGET MATRIX ================= */
         <div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px' }}>
-            <Filter size={16} className="text-gold" />
+            <Filter size={16} style={{ color: '#64748b' }} />
             <select
               value={pcfChurchFilter}
               onChange={(e) => setPcfChurchFilter(e.target.value)}
-              className="form-input"
-              style={{ maxWidth: '300px' }}
+              style={{
+                maxWidth: '300px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#0f172a',
+                fontSize: '0.86rem',
+              }}
             >
               <option value="all">All Churches ({pcfs.length} PCFs)</option>
               {churches.map((c) => (
@@ -730,16 +1049,16 @@ export const TargetManagementView: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ overflowX: 'auto', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}>
+          <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '10px', background: '#ffffff' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', textAlign: 'left' }}>
               <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                  <th style={{ padding: '12px 16px' }}>PCF NAME & CODE</th>
-                  <th style={{ padding: '12px 16px' }}>CHURCH</th>
-                  <th style={{ padding: '12px 16px' }}>SOULS WON</th>
-                  <th style={{ padding: '12px 16px' }}>TARGET GOAL (SOULS)</th>
-                  <th style={{ padding: '12px 16px' }}>PROGRESS</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>ACTION</th>
+                <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>PCF NAME & CODE</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>CHURCH</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>SOULS WON</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>TARGET GOAL (SOULS)</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em' }}>PROGRESS</th>
+                  <th style={{ padding: '12px 16px', fontSize: '0.72rem', fontWeight: '700', letterSpacing: '0.04em', textAlign: 'center' }}>ACTION</th>
                 </tr>
               </thead>
               <tbody>
@@ -749,19 +1068,20 @@ export const TargetManagementView: React.FC = () => {
                   const pct = currentTarget > 0 ? Math.round((actual / currentTarget) * 100) : 0;
                   const parentChurch = churches.find((c) => c.id === p.churchId);
                   const isSaved = savedRowIds[p.id];
+                  const mStyle = getMilestoneProgressStyle(pct);
 
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '700', color: '#ffffff' }}>{p.name}</div>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Code: {p.code}</span>
+                        <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem' }}>{p.name}</div>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Code: {p.code}</span>
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#4ade80' }}>
+                      <td style={{ padding: '12px 16px', color: '#334155', fontWeight: '600' }}>
                         {parentChurch?.name || 'Unassigned'}
                       </td>
 
-                      <td style={{ padding: '12px 16px', color: '#00ff87', fontWeight: '800' }}>
+                      <td style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '800' }}>
                         {actual.toLocaleString()}
                       </td>
 
@@ -775,23 +1095,37 @@ export const TargetManagementView: React.FC = () => {
                             const val = parseInt(e.target.value, 10) || 0;
                             setPcfDrafts((prev) => ({ ...prev, [p.id]: val }));
                           }}
-                          className="form-input"
-                          style={{ maxWidth: '120px', padding: '6px 10px', fontWeight: '700' }}
+                          style={{
+                            maxWidth: '120px',
+                            padding: '6px 10px',
+                            fontWeight: '700',
+                            color: '#0f172a',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            fontSize: '0.88rem',
+                          }}
                         />
                       </td>
 
+                      {/* Milestone progression colors only */}
                       <td style={{ padding: '12px 16px' }}>
                         <span
                           style={{
-                            padding: '4px 8px',
-                            borderRadius: '12px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 10px',
+                            borderRadius: '16px',
                             fontSize: '0.78rem',
                             fontWeight: '800',
-                            background: pct >= 75 ? 'rgba(0, 255, 135, 0.2)' : pct >= 50 ? 'rgba(255, 204, 0, 0.2)' : 'rgba(255, 69, 58, 0.2)',
-                            color: pct >= 75 ? '#00ff87' : pct >= 50 ? '#ffd60a' : '#ff453a',
+                            background: mStyle.background,
+                            color: mStyle.color,
+                            border: mStyle.border,
                           }}
                         >
-                          {pct}%
+                          {mStyle.badge && <span style={{ fontSize: '0.85rem' }}>{mStyle.badge}</span>}
+                          <span>{pct}%</span>
                         </span>
                       </td>
 
@@ -799,11 +1133,24 @@ export const TargetManagementView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleSaveSingleRow('pcf', p.id, currentTarget)}
-                          className={isSaved ? 'btn-green-accent' : 'secondary-button'}
-                          style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                          style={{
+                            padding: '6px 14px',
+                            fontSize: '0.78rem',
+                            fontWeight: '700',
+                            borderRadius: '6px',
+                            border: '1px solid',
+                            borderColor: isSaved ? '#0f172a' : '#cbd5e1',
+                            background: isSaved ? '#0f172a' : '#ffffff',
+                            color: isSaved ? '#ffffff' : '#0f172a',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.15s ease',
+                          }}
                         >
                           {isSaved ? <Check size={14} /> : <Save size={14} />}
-                          <span style={{ marginLeft: '4px' }}>{isSaved ? 'Saved' : 'Save'}</span>
+                          <span>{isSaved ? 'Saved' : 'Save'}</span>
                         </button>
                       </td>
                     </tr>
@@ -814,18 +1161,26 @@ export const TargetManagementView: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* ================= TAB 4: QUICK SINGLE SETTER ================= */
-        <div style={{ maxWidth: '600px', margin: '0 auto', background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <h3 style={{ color: '#ffffff', fontSize: '1.1rem', marginBottom: '16px', fontWeight: '700' }}>
+        /* ================= TAB 4: QUICK SINGLE SETTER (MONOCHROME) ================= */
+        <div style={{ maxWidth: '600px', margin: '0 auto', background: '#f8fafc', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '16px', fontWeight: '800' }}>
             SET INDIVIDUAL TARGET
           </h3>
           <form onSubmit={handleSingleSubmit} className="space-y-4">
             <div className="form-group">
-              <label className="form-label">ORGANIZATION LEVEL</label>
+              <label className="form-label" style={{ color: '#334155', fontWeight: '700', fontSize: '0.75rem' }}>ORGANIZATION LEVEL</label>
               <select
                 value={singleLevel}
                 onChange={(e) => handleSingleLevelChange(e.target.value as TargetLevel)}
-                className="form-input"
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontSize: '0.88rem',
+                }}
               >
                 <option value="zone">ZONE (Zonal Campaign Overall)</option>
                 <option value="group">GROUP LEVEL</option>
@@ -836,7 +1191,7 @@ export const TargetManagementView: React.FC = () => {
 
             {singleLevel !== 'zone' && (
               <div className="form-group">
-                <label className="form-label">SELECT {singleLevel.toUpperCase()}</label>
+                <label className="form-label" style={{ color: '#334155', fontWeight: '700', fontSize: '0.75rem' }}>SELECT {singleLevel.toUpperCase()}</label>
                 <select
                   value={singleOrgId}
                   onChange={(e) => {
@@ -850,7 +1205,15 @@ export const TargetManagementView: React.FC = () => {
                       setSingleTargetInput((pcfDrafts[id] || 50).toString());
                     }
                   }}
-                  className="form-input"
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    fontSize: '0.88rem',
+                  }}
                 >
                   {singleLevel === 'group' &&
                     groups.map((g) => (
@@ -875,7 +1238,7 @@ export const TargetManagementView: React.FC = () => {
             )}
 
             <div className="form-group">
-              <label className="form-label">TARGET SOUL GOAL</label>
+              <label className="form-label" style={{ color: '#334155', fontWeight: '700', fontSize: '0.75rem' }}>TARGET SOUL GOAL</label>
               <input
                 type="number"
                 min="1"
@@ -883,12 +1246,40 @@ export const TargetManagementView: React.FC = () => {
                 value={singleTargetInput}
                 onChange={(e) => setSingleTargetInput(e.target.value)}
                 placeholder="e.g. 5000"
-                className="form-input"
                 required
+                style={{
+                  width: '100%',
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  fontSize: '0.88rem',
+                }}
               />
             </div>
 
-            <button type="submit" disabled={isSaving} className="btn-green-accent btn-large" style={{ width: '100%' }}>
+            <button
+              type="submit"
+              disabled={isSaving}
+              style={{
+                width: '100%',
+                padding: '11px 18px',
+                fontWeight: '700',
+                fontSize: '0.88rem',
+                borderRadius: '8px',
+                border: '1px solid #0f172a',
+                background: '#0f172a',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
+                opacity: isSaving ? 0.7 : 1,
+                boxShadow: '0 1px 3px rgba(15,23,42,0.15)',
+              }}
+            >
               <Save size={18} />
               <span>{isSaving ? 'SAVING TARGET...' : 'SAVE TARGET'}</span>
             </button>

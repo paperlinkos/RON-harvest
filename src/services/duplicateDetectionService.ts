@@ -1,3 +1,5 @@
+import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from './firebase';
 import { getAllLocalRecords, deleteLocalRecord, saveLocalRecord } from './indexedDbService';
 import type { SoulWinningRecord } from '../types/record';
 
@@ -42,6 +44,42 @@ function saveResolvedUniquePairs(set: Set<string>): void {
   }
 }
 
+/**
+ * Loads resolved unique pairs from Firestore and merges with local cache.
+ * Falls back to localStorage if offline or Firebase is not configured.
+ */
+async function loadResolvedUniquePairsFromFirestore(): Promise<Set<string>> {
+  const localSet = getResolvedUniquePairs();
+  if (!navigator.onLine || !isFirebaseConfigured) return localSet;
+
+  try {
+    const snap = await getDocs(collection(db, 'adminDuplicateResolutions'));
+    snap.forEach((d) => localSet.add(d.data().pairKey as string));
+    // Sync back to localStorage as a cache
+    saveResolvedUniquePairs(localSet);
+  } catch (err) {
+    console.warn('[DuplicateDetection] Failed to load resolved pairs from Firestore:', err);
+  }
+  return localSet;
+}
+
+/**
+ * Persists a resolved pair key to Firestore so it survives browser cache clears.
+ */
+async function savePairToFirestore(pairKey: string): Promise<void> {
+  if (!navigator.onLine || !isFirebaseConfigured) return;
+  try {
+    // Encode the pair key to make it a safe Firestore document ID
+    const safeId = pairKey.replace(/:/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+    await setDoc(doc(db, 'adminDuplicateResolutions', safeId), {
+      pairKey,
+      resolvedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn('[DuplicateDetection] Failed to persist resolved pair to Firestore:', err);
+  }
+}
+
 /** Normalize phone number by removing country codes (+234, 234), spaces, and non-digits */
 export function normalizePhone(phone: string): string {
   if (!phone) return '';
@@ -66,7 +104,8 @@ export function extractFirstName(name: string): string {
 /** Detect duplicate soul winning records across phone numbers and first name + location */
 export async function detectDuplicateSouls(): Promise<DuplicateResolutionReport> {
   const allRecords = await getAllLocalRecords();
-  const resolvedPairs = getResolvedUniquePairs();
+  // Load from Firestore for cross-session persistence, fall back to localStorage
+  const resolvedPairs = await loadResolvedUniquePairsFromFirestore();
 
   const flaggedGroupMap = new Map<string, DuplicateGroup>();
   const processedPairKeys = new Set<string>();
@@ -274,10 +313,15 @@ export async function resolveMergeRecords(primaryRecord: SoulWinningRecord, dupl
   await deleteLocalRecord(duplicateRecord.id);
 }
 
-/** Mark record pair as confirmed unique individuals */
-export function resolveMarkAsUnique(recId1: string, recId2: string): void {
+/**
+ * Mark record pair as confirmed unique individuals.
+ * Persists to both localStorage (for offline use) and Firestore (for cross-device persistence).
+ */
+export async function resolveMarkAsUnique(recId1: string, recId2: string): Promise<void> {
   const resolvedSet = getResolvedUniquePairs();
   const pairKey = [recId1, recId2].sort().join('::');
   resolvedSet.add(pairKey);
   saveResolvedUniquePairs(resolvedSet);
+  // Also persist to Firestore so resolution survives browser cache clears
+  await savePairToFirestore(pairKey);
 }

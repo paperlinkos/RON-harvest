@@ -8,7 +8,9 @@ export type AdminAuditAction =
   | 'user_suspended'
   | 'user_reactivated'
   | 'organization_bulk_imported'
-  | 'soul_winner_bulk_imported';
+  | 'soul_winner_bulk_imported'
+  | 'targets_reset_official_pdf'
+  | 'target_updated';
 
 export interface AdminAuditLog {
   id: string;
