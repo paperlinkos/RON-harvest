@@ -29,13 +29,14 @@ import {
 } from '../../services/organizationService';
 import { TargetManagementView } from './TargetManagementView';
 import { ReconciliationView } from './ReconciliationView';
+import { DuplicateResolutionsView } from './DuplicateResolutionsView';
 import type { Zone, Group, Church, PCF, EntityStatus } from '../../types/organization';
 
 export const OrganizationManager: React.FC = () => {
   const { userProfile: currentUser, role } = useAuth();
   const isSuperAdmin = role === 'superAdmin';
 
-  const [activeTab, setActiveTab] = useState<'tree' | 'zones' | 'groups' | 'churches' | 'pcfs' | 'search' | 'targets' | 'reconciliation'>('tree');
+  const [activeTab, setActiveTab] = useState<'tree' | 'zones' | 'groups' | 'churches' | 'pcfs' | 'search' | 'targets' | 'reconciliation' | 'resolutions'>('tree');
 
   const [zones, setZones] = useState<Zone[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -317,6 +318,13 @@ export const OrganizationManager: React.FC = () => {
         >
           <FileCheck size={14} className="inline-icon" /> RECONCILIATION
         </button>
+        <button
+          onClick={() => { setActiveTab('resolutions'); setError(''); setSuccess(''); }}
+          className={`subtab-btn ${activeTab === 'resolutions' ? 'subtab-active' : ''}`}
+          style={{ color: activeTab === 'resolutions' ? '#FFD700' : '#cbd5e1' }}
+        >
+          <ShieldAlert size={14} className="inline-icon" /> RESOLUTIONS
+        </button>
       </div>
 
       {error && (
@@ -333,7 +341,9 @@ export const OrganizationManager: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'reconciliation' ? (
+      {activeTab === 'resolutions' ? (
+        <DuplicateResolutionsView />
+      ) : activeTab === 'reconciliation' ? (
         <ReconciliationView />
       ) : activeTab === 'targets' ? (
         <TargetManagementView />

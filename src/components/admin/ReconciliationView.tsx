@@ -14,24 +14,31 @@ import {
   type UserReconciliationReport,
   type TargetReconciliationReport,
 } from '../../services/reconciliationService';
+import {
+  detectDuplicateSouls,
+  type DuplicateResolutionReport,
+} from '../../services/duplicateDetectionService';
 
 export const ReconciliationView: React.FC = () => {
   const [orgReport, setOrgReport] = useState<OrganizationReconciliationReport | null>(null);
   const [userReport, setUserReport] = useState<UserReconciliationReport | null>(null);
   const [targetReport, setTargetReport] = useState<TargetReconciliationReport | null>(null);
+  const [dupReport, setDupReport] = useState<DuplicateResolutionReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const runReconciliation = async () => {
     setIsLoading(true);
     try {
-      const [oRep, uRep, tRep] = await Promise.all([
+      const [oRep, uRep, tRep, dRep] = await Promise.all([
         reconcileOrganizations(),
         reconcileUsers(),
         reconcileTargets(),
+        detectDuplicateSouls(),
       ]);
       setOrgReport(oRep);
       setUserReport(uRep);
       setTargetReport(tRep);
+      setDupReport(dRep);
     } catch (err) {
       console.error('Failed to run reconciliation reports:', err);
     } finally {
@@ -165,6 +172,39 @@ export const ReconciliationView: React.FC = () => {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 3. DUPLICATE SOULS RECONCILIATION CARD */}
+          {dupReport && (
+            <div style={{ border: `1px solid ${dupReport.isHealthy ? '#bbf7d0' : '#fecaca'}`, borderRadius: '8px', padding: '1.25rem', background: dupReport.isHealthy ? '#f0fdf4' : '#fef2f2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {dupReport.isHealthy ? (
+                    <CheckCircle2 size={20} style={{ color: '#166534' }} />
+                  ) : (
+                    <AlertTriangle size={20} style={{ color: '#dc2626' }} />
+                  )}
+                  <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: dupReport.isHealthy ? '#166534' : '#991b1b' }}>
+                    DUPLICATE SOULS RECONCILIATION — {dupReport.isHealthy ? 'NO CONFLICTS' : `${dupReport.duplicateGroups.length} CONFLICTS DETECTED`}
+                  </h4>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '0.75rem', textAlign: 'center' }}>
+                <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#666' }}>RECORDS SCANNED</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>{dupReport.totalRecordsScanned.toLocaleString()}</div>
+                </div>
+                <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '0.75rem', color: dupReport.duplicateGroups.length > 0 ? '#dc2626' : '#666' }}>CONFLICT GROUPS</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: dupReport.duplicateGroups.length > 0 ? '#dc2626' : '#166534' }}>{dupReport.duplicateGroups.length}</div>
+                </div>
+                <div style={{ background: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#666' }}>FLAGGED RECORDS</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: dupReport.totalFlaggedCount > 0 ? '#b45309' : '#166534' }}>{dupReport.totalFlaggedCount}</div>
+                </div>
+              </div>
             </div>
           )}
 

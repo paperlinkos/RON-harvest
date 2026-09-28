@@ -4,6 +4,7 @@ import type { FormSubmissionData } from '../types/record';
 import type { SubmissionResult } from '../hooks/useSoulRecords';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import type { EventStatus } from '../config/eventConfig';
+import { checkSingleRecordDuplicate } from '../services/duplicateDetectionService';
 
 interface SoulRecordFormProps {
   onSubmit: (data: FormSubmissionData) => Promise<SubmissionResult>;
@@ -41,6 +42,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [successResult, setSuccessResult] = useState<{
     isOffline: boolean;
   } | null>(null);
@@ -48,6 +50,22 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (formData.phone.length >= 7 || (formData.name.trim().length >= 3 && formData.location.trim().length >= 2)) {
+      const timer = setTimeout(async () => {
+        const res = await checkSingleRecordDuplicate(formData.name, formData.phone, formData.location);
+        if (res.isDuplicate) {
+          setDuplicateWarning(res.matchReason || 'Potential duplicate soul detected.');
+        } else {
+          setDuplicateWarning(null);
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    } else {
+      setDuplicateWarning(null);
+    }
+  }, [formData.name, formData.phone, formData.location]);
 
   useEffect(() => {
     if (!successResult) {
@@ -364,10 +382,14 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
                 disabled={isSubmitting}
                 style={{ width: '18px', height: '18px', accentColor: '#FFD700', cursor: 'pointer' }}
               />
-              <span>🔥 Filled with The Spirit</span>
-            </label>
           </div>
         </div>
+
+        {duplicateWarning && (
+          <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid #f59e0b', color: '#fbbf24', padding: '10px 14px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 'bold', marginBottom: '12px' }}>
+            ⚠️ DUPLICATE WARNING: {duplicateWarning}
+          </div>
+        )}
 
         {errors.general && <div className="general-error-box">{errors.general}</div>}
 
