@@ -22,7 +22,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
             </h3>
           </div>
           <p className="race-subtitle" style={{ color: '#94a3b8' }}>
-            Real-time vertical bar chart showing Groups climbing toward their 100% target finish line.
+            Real-time vertical bar chart showing all {competitors.length} Groups climbing toward their 100% target finish line.
           </p>
         </div>
 
@@ -34,7 +34,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
             </p>
           </div>
         ) : (
-          <div className="barchart-wrapper" style={{ position: 'relative', marginTop: '16px' }}>
+          <div className="barchart-wrapper" style={{ position: 'relative', marginTop: '16px', width: '100%', overflowX: 'auto' }}>
             {/* Target 100% Line Banner */}
             <div
               className="barchart-target-line"
@@ -44,7 +44,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 gap: '8px',
                 paddingBottom: '8px',
                 borderBottom: '2px dashed #00e676',
-                marginBottom: '20px',
+                marginBottom: '16px',
               }}
             >
               <Flag size={14} style={{ color: '#00e676' }} />
@@ -53,18 +53,19 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
               </span>
             </div>
 
-            {/* Grid Chart Columns Area */}
+            {/* Grid Chart Columns Area for ALL Groups */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: `repeat(${Math.min(8, competitors.length)}, 1fr)`,
-                gap: '14px',
+                gridTemplateColumns: `repeat(${competitors.length}, minmax(42px, 1fr))`,
+                gap: '6px',
                 alignItems: 'flex-end',
                 minHeight: '260px',
-                paddingBottom: '10px',
+                paddingBottom: '8px',
+                width: '100%',
               }}
             >
-              {competitors.slice(0, 8).map((comp, idx) => {
+              {competitors.map((comp, idx) => {
                 const heightPct = Math.max(
                   4,
                   Math.min(100, (comp.normalizedProgress ?? comp.percentage / 100) * 100)
@@ -84,55 +85,22 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                       justify: 'flex-end',
                       gap: '8px',
                     }}
+                    title={`${comp.name} (${comp.code || 'No Code'}): ${comp.soulsWon.toLocaleString()} / ${comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls (${displayPct})`}
                   >
-                    {/* Top Stat Badge above Bar */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        background: 'rgba(255, 255, 255, 0.09)',
-                        padding: '6px 8px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        textAlign: 'center',
-                        width: '100%',
-                        maxWidth: '92px',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '0.85rem',
-                          fontWeight: '900',
-                          color: comp.isTargetExceeded ? '#FFD700' : '#00e676',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '2px',
-                        }}
-                      >
-                        {displayPct}
-                        {comp.isTargetExceeded && <Sparkles size={10} style={{ color: '#FFD700' }} />}
-                      </span>
-                      <span style={{ fontSize: '0.68rem', color: '#e2e8f0', fontWeight: '700', marginTop: '1px' }}>
-                        {comp.soulsWon.toLocaleString()} / {comp.target > 0 ? comp.target.toLocaleString() : '0'}
-                      </span>
-                    </div>
-
                     {/* Vertical Bar Track Column */}
                     <div
                       style={{
                         width: '100%',
-                        maxWidth: '48px',
+                        maxWidth: '22px',
                         height: '180px',
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        borderRadius: '6px 6px 0 0',
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        borderRadius: '4px 4px 0 0',
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'flex-end',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                         overflow: 'hidden',
-                        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.8)',
+                        boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
                       }}
                     >
                       <div
@@ -142,34 +110,73 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                           background: comp.isTargetExceeded
                             ? 'linear-gradient(180deg, #FFD700 0%, #008751 100%)'
                             : 'linear-gradient(180deg, #50f28e 0%, #008751 100%)',
-                          borderRadius: '4px 4px 0 0',
+                          borderRadius: '3px 3px 0 0',
                           transition: 'height 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                          boxShadow: '0 0 14px rgba(80, 242, 142, 0.5), inset 0 2px 4px rgba(255,255,255,0.7)',
+                          boxShadow: '0 0 10px rgba(80, 242, 142, 0.5), inset 0 2px 4px rgba(255,255,255,0.7)',
                           borderTop: '2px solid #ffffff',
                         }}
                       />
                     </div>
 
-                    {/* Bottom X-Axis Label */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: '900', color: rankColor }}>
+                    {/* ALL LABELS PLACED UNDER THE BAR */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        width: '100%',
+                        gap: '2px',
+                      }}
+                    >
+                      {/* Rank */}
+                      <span style={{ fontSize: '0.72rem', fontWeight: '900', color: rankColor }}>
                         #{idx + 1}
                       </span>
+
+                      {/* Group Code / Name */}
                       <span
                         style={{
-                          fontSize: '0.82rem',
+                          fontSize: '0.74rem',
                           fontWeight: '800',
                           color: '#ffffff',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          maxWidth: '95px',
+                          maxWidth: '52px',
                           display: 'block',
-                          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                         }}
-                        title={comp.name}
                       >
-                        {comp.code || comp.name}
+                        {comp.code ? comp.code.replace(/^GRP-/, '') : comp.name}
+                      </span>
+
+                      {/* Percentage Pill */}
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: '900',
+                          color: comp.isTargetExceeded ? '#FFD700' : '#00e676',
+                          lineHeight: '1',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '1px',
+                        }}
+                      >
+                        {displayPct}
+                        {comp.isTargetExceeded && <Sparkles size={8} style={{ color: '#FFD700' }} />}
+                      </span>
+
+                      {/* Souls Count Readout */}
+                      <span
+                        style={{
+                          fontSize: '0.62rem',
+                          color: '#94a3b8',
+                          fontWeight: '700',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {comp.soulsWon.toLocaleString()}/{comp.target >= 1000 ? `${(comp.target / 1000).toFixed(0)}k` : comp.target}
                       </span>
                     </div>
                   </div>
