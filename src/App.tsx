@@ -18,6 +18,7 @@ import { UserManagementView } from './components/admin/UserManagementView';
 import { RoleDashboardView } from './components/dashboard/RoleDashboardView';
 import { EventControlView } from './components/admin/EventControlView';
 import { BulkImportView } from './components/admin/BulkImportView';
+import { LeaderSoulEntryView } from './components/leader/LeaderSoulEntryView';
 import { useSoulRecords } from './hooks/useSoulRecords';
 import { useEventConfig } from './hooks/useEventConfig';
 import { DevRoleSwitcher } from './components/DevRoleSwitcher';
@@ -159,36 +160,40 @@ const MainContent: React.FC = () => {
                   </button>
                 </div>
               ) : isActiveSoulWinner ? (
-                <div className="record-container">
-                  <div className="record-subnav">
-                    <button
-                      type="button"
-                      onClick={() => setRecordSubTab('form')}
-                      className={`subtab-btn ${recordSubTab === 'form' ? 'subtab-active' : ''}`}
-                    >
-                      RECORD SOUL
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRecordSubTab('history')}
-                      className={`subtab-btn ${recordSubTab === 'history' ? 'subtab-active' : ''}`}
-                    >
-                      MY SUBMISSIONS ({records.length})
-                    </button>
-                  </div>
+                role === 'churchManager' || role === 'groupManager' || role === 'zoneManager' || role === 'superAdmin' || role === 'pcfLeader' ? (
+                  <LeaderSoulEntryView />
+                ) : (
+                  <div className="record-container">
+                    <div className="record-subnav">
+                      <button
+                        type="button"
+                        onClick={() => setRecordSubTab('form')}
+                        className={`subtab-btn ${recordSubTab === 'form' ? 'subtab-active' : ''}`}
+                      >
+                        RECORD SOUL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRecordSubTab('history')}
+                        className={`subtab-btn ${recordSubTab === 'history' ? 'subtab-active' : ''}`}
+                      >
+                        MY SUBMISSIONS ({records.length})
+                      </button>
+                    </div>
 
-                  {recordSubTab === 'form' ? (
-                    <SoulRecordForm
-                      onSubmit={submitRecord}
-                      isSubmitting={isSubmitting}
-                      mySoulsWon={records.length}
-                      onViewHistory={() => setRecordSubTab('history')}
-                      eventStatus={eventConfig.status}
-                    />
-                  ) : (
-                    <RecentSubmissions records={records} isLoading={isLoading} />
-                  )}
-                </div>
+                    {recordSubTab === 'form' ? (
+                      <SoulRecordForm
+                        onSubmit={submitRecord}
+                        isSubmitting={isSubmitting}
+                        mySoulsWon={records.length}
+                        onViewHistory={() => setRecordSubTab('history')}
+                        eventStatus={eventConfig.status}
+                      />
+                    ) : (
+                      <RecentSubmissions records={records} isLoading={isLoading} />
+                    )}
+                  </div>
+                )
               ) : (
                 <div className="account-card empty-card">
                   <Lock size={32} className="text-error" />

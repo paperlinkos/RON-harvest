@@ -89,7 +89,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
           title="Record a Soul"
         >
           <HeartHandshake size={20} />
-          {!isCollapsed && <span>RECORD SOUL</span>}
+          {!isCollapsed && (
+            <span>{role && role !== 'soulWinner' ? 'SOUL ENTRY & UPLOAD' : 'RECORD SOUL'}</span>
+          )}
         </button>
 
         {isAuthenticated && (

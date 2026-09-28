@@ -1,0 +1,900 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Upload,
+  Download,
+  UserPlus,
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertCircle,
+  Building2,
+  Church,
+  User,
+  Phone,
+  MapPin,
+  Search,
+  FileText,
+  RefreshCw,
+  Layers,
+  Sparkles,
+  Check,
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useSoulRecords } from '../../hooks/useSoulRecords';
+import { DEFAULT_GROUPS, DEFAULT_CHURCHES } from '../../services/organizationService';
+import { saveLocalRecord } from '../../services/indexedDbService';
+import { syncPendingRecords, notifyRecordChanges } from '../../services/syncService';
+import { parseCSV, generateCSV } from '../../utils/csv';
+import { generateUUID } from '../../utils/uuid';
+import { isValidPhoneNumber, isNonEmptyText } from '../../utils/validation';
+import type { SoulWinningRecord } from '../../types/record';
+import type { Group, Church as ChurchType } from '../../types/organization';
+
+interface ParsedSoulRow {
+  rowIndex: number;
+  groupName?: string;
+  groupId?: string;
+  churchName?: string;
+  churchId?: string;
+  name: string;
+  phone: string;
+  location: string;
+  notes?: string;
+  isValid: boolean;
+  error?: string;
+}
+
+export const LeaderSoulEntryView: React.FC = () => {
+  const { userProfile, soulWinnerProfile, role } = useAuth();
+  const { records, submitRecord, isSubmitting } = useSoulRecords();
+
+  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'history'>('single');
+
+  // Single Entry Form State
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(soulWinnerProfile?.groupId || 'grp-gwarinpa');
+  const [selectedChurchId, setSelectedChurchId] = useState<string>(soulWinnerProfile?.churchId || 'ch-ce-gwarinpa-1');
+  const [singleName, setSingleName] = useState<string>('');
+  const [singlePhone, setSinglePhone] = useState<string>('');
+  const [singleLocation, setSingleLocation] = useState<string>('');
+  const [singleNotes, setSingleNotes] = useState<string>('');
+  const [singleSuccess, setSingleSuccess] = useState<string | null>(null);
+  const [singleError, setSingleError] = useState<string | null>(null);
+  const [isSingleSubmitting, setIsSingleSubmitting] = useState<boolean>(false);
+
+  // Bulk Upload State
+  const [bulkTargetGroupId, setBulkTargetGroupId] = useState<string>(soulWinnerProfile?.groupId || 'grp-gwarinpa');
+  const [bulkTargetChurchId, setBulkTargetChurchId] = useState<string>(soulWinnerProfile?.churchId || 'ch-ce-gwarinpa-1');
+  const [overrideChurch, setOverrideChurch] = useState<boolean>(false);
+  const [csvRawText, setCsvRawText] = useState<string>('');
+  const [parsedRows, setParsedRows] = useState<ParsedSoulRow[]>([]);
+  const [isCommitingBulk, setIsCommitingBulk] = useState<boolean>(false);
+  const [bulkCommitSuccess, setBulkCommitSuccess] = useState<string | null>(null);
+  const [bulkCommitError, setBulkCommitError] = useState<string | null>(null);
+
+  // Filtered churches list based on selected group
+  const availableGroups: Group[] = DEFAULT_GROUPS;
+
+  const getChurchesForGroup = (grpId: string): ChurchType[] => {
+    return DEFAULT_CHURCHES.filter((c) => c.groupId === grpId);
+  };
+
+  // Sync initial selections if profile updates
+  useEffect(() => {
+    if (soulWinnerProfile?.groupId) setSelectedGroupId(soulWinnerProfile.groupId);
+    if (soulWinnerProfile?.churchId) setSelectedChurchId(soulWinnerProfile.churchId);
+  }, [soulWinnerProfile]);
+
+  // When selectedGroupId changes, update selectedChurchId to first church in that group
+  const handleGroupChange = (grpId: string) => {
+    setSelectedGroupId(grpId);
+    const churchesInGrp = getChurchesForGroup(grpId);
+    if (churchesInGrp.length > 0) {
+      setSelectedChurchId(churchesInGrp[0].id);
+    } else {
+      setSelectedChurchId('');
+    }
+  };
+
+  const handleBulkGroupChange = (grpId: string) => {
+    setBulkTargetGroupId(grpId);
+    const churchesInGrp = getChurchesForGroup(grpId);
+    if (churchesInGrp.length > 0) {
+      setBulkTargetChurchId(churchesInGrp[0].id);
+    } else {
+      setBulkTargetChurchId('');
+    }
+  };
+
+  // Handle Single Entry Submit
+  const handleSingleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSingleSuccess(null);
+    setSingleError(null);
+
+    if (!isNonEmptyText(singleName)) {
+      setSingleError("Please enter the soul's full name.");
+      return;
+    }
+    if (!isNonEmptyText(singlePhone) || !isValidPhoneNumber(singlePhone)) {
+      setSingleError('Please enter a valid phone number.');
+      return;
+    }
+    if (!isNonEmptyText(singleLocation)) {
+      setSingleError('Please enter location/address.');
+      return;
+    }
+    if (!selectedChurchId) {
+      setSingleError('Please select a target Church.');
+      return;
+    }
+
+    setIsSingleSubmitting(true);
+    try {
+      const churchObj = DEFAULT_CHURCHES.find((c) => c.id === selectedChurchId);
+      const groupObj = DEFAULT_GROUPS.find((g) => g.id === (churchObj?.groupId || selectedGroupId));
+
+      const nowIso = new Date().toISOString();
+      const newRecord: SoulWinningRecord = {
+        id: generateUUID(),
+        name: singleName.trim(),
+        phone: singlePhone.trim(),
+        location: singleLocation.trim(),
+        notes: singleNotes.trim() || undefined,
+        createdAt: nowIso,
+        clientCreatedAt: nowIso,
+        syncStatus: 'pending',
+        soulWinnerId: userProfile?.id || 'leader',
+        churchId: churchObj?.id || selectedChurchId,
+        churchName: churchObj?.name || 'Selected Church',
+        groupId: groupObj?.id || selectedGroupId,
+        groupName: groupObj?.name || 'Selected Group',
+        zoneId: 'zone-abuja-1',
+        zoneName: 'Abuja Zone 1',
+        eventId: 'ron-2026-oct1',
+      };
+
+      await saveLocalRecord(newRecord);
+      await notifyRecordChanges();
+      syncPendingRecords();
+
+      setSingleSuccess(`Successfully recorded ${singleName} for ${churchObj?.name || 'Church'}!`);
+      setSingleName('');
+      setSinglePhone('');
+      setSingleLocation('');
+      setSingleNotes('');
+    } catch (err) {
+      console.error('Single submission error:', err);
+      setSingleError('Failed to record soul. Please try again.');
+    } finally {
+      setIsSingleSubmitting(false);
+    }
+  };
+
+  // Helper: Download Template CSV
+  const handleDownloadTemplate = (templateType: 'church' | 'group' | 'zone') => {
+    let headers: string[] = [];
+    let sampleRows: string[][] = [];
+    let filename = '';
+
+    if (templateType === 'church') {
+      filename = 'CEAZ1_Church_Soul_Entry_Template.csv';
+      headers = ['Soul Name', 'Phone', 'Location', 'Notes'];
+      sampleRows = [
+        ['John Doe', '+2348012345678', 'Gwarinpa Estate, Abuja', 'New convert from Sunday service'],
+        ['Jane Smith', '+2348087654321', 'First Avenue, Gwarinpa', 'Accepted Christ during street outreach'],
+      ];
+    } else if (templateType === 'group') {
+      filename = 'CEAZ1_Group_Bulk_Soul_Template.csv';
+      headers = ['Church Name', 'Soul Name', 'Phone', 'Location', 'Notes'];
+      sampleRows = [
+        ['CE Gwarinpa 1', 'John Doe', '+2348012345678', 'Gwarinpa Estate', 'First timer'],
+        ['CE Precious Place', 'Mark Johnson', '+2348055551212', 'Kado Fish Market', 'Recommitted life'],
+        ['CE Word Arena', 'Blessing Udoh', '+2348033334444', 'Lugbe Airport Road', 'Soul won at rally'],
+      ];
+    } else {
+      filename = 'CEAZ1_Master_Zonal_Soul_Template.csv';
+      headers = ['Group Name', 'Church Name', 'Soul Name', 'Phone', 'Location', 'Notes'];
+      sampleRows = [
+        ['Gwarinpa Group', 'CE Gwarinpa 1', 'John Doe', '+2348012345678', 'Gwarinpa Estate', 'First timer'],
+        ['Wuye Sub-Group 1', 'CE KBS', 'Sarah Connor', '+2348099990000', 'Wuye District', 'New convert'],
+        ['Karmo Group', 'CE Karmo', 'Emmanuel Ali', '+2348022221111', 'Karmo Market', 'Outreach winner'],
+      ];
+    }
+
+    const csvStr = generateCSV(headers, sampleRows);
+    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Parse CSV File or Raw Text
+  const handleParseCsvContent = (text: string) => {
+    setCsvRawText(text);
+    setBulkCommitSuccess(null);
+    setBulkCommitError(null);
+
+    const rows = parseCSV(text);
+    if (rows.length < 2) {
+      setParsedRows([]);
+      return;
+    }
+
+    const header = rows[0].map((h) => h.toLowerCase());
+    const nameIdx = header.findIndex((h) => h.includes('name') && !h.includes('church') && !h.includes('group'));
+    const phoneIdx = header.findIndex((h) => h.includes('phone') || h.includes('mobile') || h.includes('tel'));
+    const locIdx = header.findIndex((h) => h.includes('location') || h.includes('address'));
+    const notesIdx = header.findIndex((h) => h.includes('note') || h.includes('comment'));
+    const churchIdx = header.findIndex((h) => h.includes('church'));
+    const groupIdx = header.findIndex((h) => h.includes('group'));
+
+    const parsedList: ParsedSoulRow[] = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.length === 0 || row.every((cell) => !cell.trim())) continue;
+
+      const nameVal = nameIdx >= 0 ? row[nameIdx] || '' : row[0] || '';
+      const phoneVal = phoneIdx >= 0 ? row[phoneIdx] || '' : row[1] || '';
+      const locVal = locIdx >= 0 ? row[locIdx] || '' : row[2] || '';
+      const notesVal = notesIdx >= 0 ? row[notesIdx] || '' : row[3] || '';
+      const churchNameVal = churchIdx >= 0 ? row[churchIdx] || '' : '';
+      const groupNameVal = groupIdx >= 0 ? row[groupIdx] || '' : '';
+
+      let isValid = true;
+      let errorMsg = '';
+
+      if (!isNonEmptyText(nameVal)) {
+        isValid = false;
+        errorMsg = 'Missing name';
+      } else if (!isNonEmptyText(phoneVal)) {
+        isValid = false;
+        errorMsg = 'Missing phone number';
+      } else if (!isValidPhoneNumber(phoneVal)) {
+        isValid = false;
+        errorMsg = 'Invalid phone number format';
+      } else if (!isNonEmptyText(locVal)) {
+        isValid = false;
+        errorMsg = 'Missing location/address';
+      }
+
+      // Match Church if provided in CSV
+      let matchedChurchId: string | undefined = undefined;
+      let matchedChurchName: string | undefined = undefined;
+      let matchedGroupId: string | undefined = undefined;
+      let matchedGroupName: string | undefined = undefined;
+
+      if (churchNameVal.trim()) {
+        const foundCh = DEFAULT_CHURCHES.find(
+          (c) => c.name.toLowerCase().trim() === churchNameVal.toLowerCase().trim() || c.code.toLowerCase() === churchNameVal.toLowerCase().trim()
+        );
+        if (foundCh) {
+          matchedChurchId = foundCh.id;
+          matchedChurchName = foundCh.name;
+          matchedGroupId = foundCh.groupId;
+          const foundGrp = DEFAULT_GROUPS.find((g) => g.id === foundCh.groupId);
+          matchedGroupName = foundGrp?.name;
+        } else if (!overrideChurch) {
+          isValid = false;
+          errorMsg = `Church "${churchNameVal}" not found`;
+        }
+      }
+
+      parsedList.push({
+        rowIndex: i + 1,
+        name: nameVal.trim(),
+        phone: phoneVal.trim(),
+        location: locVal.trim(),
+        notes: notesVal.trim() || undefined,
+        churchName: matchedChurchName || churchNameVal,
+        churchId: matchedChurchId,
+        groupName: matchedGroupName || groupNameVal,
+        groupId: matchedGroupId,
+        isValid,
+        error: errorMsg || undefined,
+      });
+    }
+
+    setParsedRows(parsedList);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result as string;
+      if (text) {
+        handleParseCsvContent(text);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Commit Valid Bulk Records to Database
+  const handleCommitBulk = async () => {
+    const validRows = parsedRows.filter((r) => r.isValid);
+    if (validRows.length === 0) return;
+
+    setIsCommitingBulk(true);
+    setBulkCommitSuccess(null);
+    setBulkCommitError(null);
+
+    try {
+      const fallbackChurch = DEFAULT_CHURCHES.find((c) => c.id === bulkTargetChurchId);
+      const fallbackGroup = DEFAULT_GROUPS.find((g) => g.id === (fallbackChurch?.groupId || bulkTargetGroupId));
+
+      const nowIso = new Date().toISOString();
+      let addedCount = 0;
+
+      for (const row of validRows) {
+        const targetChId = row.churchId || fallbackChurch?.id || bulkTargetChurchId;
+        const targetChName = row.churchName || fallbackChurch?.name || 'Selected Church';
+        const targetGrpId = row.groupId || fallbackGroup?.id || bulkTargetGroupId;
+        const targetGrpName = row.groupName || fallbackGroup?.name || 'Selected Group';
+
+        const record: SoulWinningRecord = {
+          id: generateUUID(),
+          name: row.name,
+          phone: row.phone,
+          location: row.location,
+          notes: row.notes,
+          createdAt: nowIso,
+          clientCreatedAt: nowIso,
+          syncStatus: 'pending',
+          soulWinnerId: userProfile?.id || 'leader',
+          churchId: targetChId,
+          churchName: targetChName,
+          groupId: targetGrpId,
+          groupName: targetGrpName,
+          zoneId: 'zone-abuja-1',
+          zoneName: 'Abuja Zone 1',
+          eventId: 'ron-2026-oct1',
+        };
+
+        await saveLocalRecord(record);
+        addedCount++;
+      }
+
+      await notifyRecordChanges();
+      syncPendingRecords();
+
+      setBulkCommitSuccess(`Successfully imported and recorded ${addedCount} souls across targeted churches!`);
+      setParsedRows([]);
+      setCsvRawText('');
+    } catch (err) {
+      console.error('Bulk commit error:', err);
+      setBulkCommitError('Failed to commit bulk import. Please check file formatting.');
+    } finally {
+      setIsCommitingBulk(false);
+    }
+  };
+
+  const isChurchAdmin = role === 'churchManager' || role === 'pcfLeader';
+  const isGroupAdmin = role === 'groupManager';
+  const isZonalAdmin = role === 'zoneManager' || role === 'superAdmin';
+
+  const validRowsCount = parsedRows.filter((r) => r.isValid).length;
+  const invalidRowsCount = parsedRows.filter((r) => !r.isValid).length;
+
+  return (
+    <div className="record-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '16px' }}>
+      {/* LEADER HEADER / CONTEXT BANNER */}
+      <div
+        className="account-card"
+        style={{
+          background: 'linear-gradient(135deg, #071710 0%, #0d2a1d 100%)',
+          color: '#ffffff',
+          border: '1px solid rgba(0, 135, 81, 0.4)',
+          marginBottom: '20px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Building2 size={20} color="#FFD700" />
+              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold', color: '#ffffff' }}>
+                LEADER SOUL ENTRY & BULK UPLOAD HUB
+              </h2>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
+              {isChurchAdmin
+                ? `Recording & bulk importing souls for ${soulWinnerProfile?.churchName || 'your assigned Church'}.`
+                : isGroupAdmin
+                ? `Managing & bulk uploading souls across Churches in ${soulWinnerProfile?.groupName || 'your Group'}.`
+                : 'Zonal Master Entry: Single & Bulk Soul Uploads for all Groups & Churches in Abuja Zone 1.'}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                background: 'rgba(0, 135, 81, 0.25)',
+                border: '1px solid #008751',
+                color: '#4ade80',
+                padding: '4px 12px',
+                borderRadius: '16px',
+                fontSize: '0.78rem',
+                fontWeight: '600',
+              }}
+            >
+              {isChurchAdmin ? 'CHURCH LEADER' : isGroupAdmin ? 'GROUP LEADER' : 'ZONAL ADMIN'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SUB-TABS NAV BAR */}
+      <div className="record-subnav" style={{ marginBottom: '20px' }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('single')}
+          className={`subtab-btn ${activeTab === 'single' ? 'subtab-active' : ''}`}
+        >
+          <UserPlus size={16} />
+          <span>SINGLE SOUL ENTRY</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('bulk')}
+          className={`subtab-btn ${activeTab === 'bulk' ? 'subtab-active' : ''}`}
+        >
+          <FileSpreadsheet size={16} />
+          <span>BULK CSV / EXCEL UPLOAD</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('history')}
+          className={`subtab-btn ${activeTab === 'history' ? 'subtab-active' : ''}`}
+        >
+          <FileText size={16} />
+          <span>SUBMISSIONS HISTORY ({records.length})</span>
+        </button>
+      </div>
+
+      {/* ================= TAB 1: SINGLE SOUL ENTRY ================= */}
+      {activeTab === 'single' && (
+        <div className="form-card rapid-record-card">
+          <div className="record-form-top-bar" style={{ marginBottom: '20px' }}>
+            <h3 className="form-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <UserPlus size={20} className="text-green-accent" />
+              <span>RECORD SINGLE SOUL</span>
+            </h3>
+          </div>
+
+          {singleSuccess && (
+            <div className="banner banner-success" role="status" style={{ marginBottom: '16px' }}>
+              <CheckCircle2 size={18} />
+              <div>
+                <strong>SUCCESS</strong>
+                <p className="banner-subtext">{singleSuccess}</p>
+              </div>
+            </div>
+          )}
+
+          {singleError && (
+            <div className="banner banner-error" role="status" style={{ marginBottom: '16px' }}>
+              <AlertCircle size={18} />
+              <div>
+                <strong>ERROR</strong>
+                <p className="banner-subtext">{singleError}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSingleSubmit} className="record-form">
+            {/* GROUP & CHURCH TARGET SELECTORS (For Group & Zonal Admins) */}
+            {(isGroupAdmin || isZonalAdmin) && (
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid #1e3a2f', marginBottom: '20px' }}>
+                <h4 style={{ fontSize: '0.85rem', color: '#FFD700', margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🎯 Target Organizational Assignment
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: isZonalAdmin ? '1fr 1fr' : '1fr', gap: '12px' }}>
+                  {isZonalAdmin && (
+                    <div className="form-group">
+                      <label className="form-label">TARGET GROUP</label>
+                      <div className="input-wrapper">
+                        <Building2 size={18} className="input-icon" />
+                        <select
+                          value={selectedGroupId}
+                          onChange={(e) => handleGroupChange(e.target.value)}
+                          className="form-input"
+                          style={{ paddingLeft: '40px', appearance: 'auto' }}
+                        >
+                          {availableGroups.map((g) => (
+                            <option key={g.id} value={g.id} style={{ background: '#0d1f18', color: '#fff' }}>
+                              {g.name} ({g.code})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label className="form-label">TARGET CHURCH</label>
+                    <div className="input-wrapper">
+                      <Church size={18} className="input-icon" />
+                      <select
+                        value={selectedChurchId}
+                        onChange={(e) => setSelectedChurchId(e.target.value)}
+                        className="form-input"
+                        style={{ paddingLeft: '40px', appearance: 'auto' }}
+                      >
+                        {getChurchesForGroup(selectedGroupId).map((c) => (
+                          <option key={c.id} value={c.id} style={{ background: '#0d1f18', color: '#fff' }}>
+                            {c.name} ({c.code})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SOUL DETAILS */}
+            <div className="form-group">
+              <label htmlFor="single-name" className="form-label">
+                SOUL FULL NAME *
+              </label>
+              <div className="input-wrapper">
+                <User size={18} className="input-icon" />
+                <input
+                  id="single-name"
+                  type="text"
+                  value={singleName}
+                  onChange={(e) => setSingleName(e.target.value)}
+                  placeholder="e.g. Brother Emmanuel Okafor"
+                  className="form-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="single-phone" className="form-label">
+                PHONE NUMBER *
+              </label>
+              <div className="input-wrapper">
+                <Phone size={18} className="input-icon" />
+                <input
+                  id="single-phone"
+                  type="tel"
+                  value={singlePhone}
+                  onChange={(e) => setSinglePhone(e.target.value)}
+                  placeholder="e.g. 08012345678"
+                  className="form-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="single-loc" className="form-label">
+                LOCATION / ADDRESS *
+              </label>
+              <div className="input-wrapper">
+                <MapPin size={18} className="input-icon" />
+                <input
+                  id="single-loc"
+                  type="text"
+                  value={singleLocation}
+                  onChange={(e) => setSingleLocation(e.target.value)}
+                  placeholder="e.g. Gwarinpa Estate Phase 2, Abuja"
+                  className="form-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="single-notes" className="form-label">
+                ADDITIONAL NOTES / FOLLOW-UP (OPTIONAL)
+              </label>
+              <textarea
+                id="single-notes"
+                value={singleNotes}
+                onChange={(e) => setSingleNotes(e.target.value)}
+                placeholder="e.g. Invited for Sunday first service, needs baptism class."
+                className="form-input"
+                rows={2}
+                style={{ paddingLeft: '14px', paddingTop: '10px' }}
+              />
+            </div>
+
+            <button type="submit" disabled={isSingleSubmitting} className="submit-button" style={{ marginTop: '12px' }}>
+              <UserPlus size={18} />
+              <span>{isSingleSubmitting ? 'RECORDING SOUL...' : 'RECORD SOUL NOW'}</span>
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ================= TAB 2: BULK CSV / EXCEL UPLOAD ================= */}
+      {activeTab === 'bulk' && (
+        <div className="form-card rapid-record-card">
+          <div className="record-form-top-bar" style={{ marginBottom: '20px' }}>
+            <h3 className="form-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileSpreadsheet size={20} className="text-green-accent" />
+              <span>BULK CSV / EXCEL SPREADSHEET UPLOAD</span>
+            </h3>
+          </div>
+
+          {/* TEMPLATE DOWNLOAD BOX */}
+          <div
+            style={{
+              background: 'rgba(0, 135, 81, 0.1)',
+              border: '1px solid rgba(0, 135, 81, 0.4)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD700', marginBottom: '8px', fontWeight: 'bold', fontSize: '0.95rem' }}>
+              <Download size={18} />
+              <span>DOWNLOAD CSV TEMPLATES</span>
+            </div>
+            <p style={{ fontSize: '0.82rem', color: '#e2e8f0', margin: '0 0 12px 0', lineHeight: '1.4' }}>
+              Download pre-formatted CSV template files. Open in Excel, Google Sheets, or any text editor, fill in your souls data, save, and upload below.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handleDownloadTemplate('church')}
+                className="secondary-button"
+                style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+              >
+                <Download size={14} />
+                <span>Church Template (Single Church)</span>
+              </button>
+              {(isGroupAdmin || isZonalAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => handleDownloadTemplate('group')}
+                  className="secondary-button"
+                  style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+                >
+                  <Download size={14} />
+                  <span>Group Template (with Churches)</span>
+                </button>
+              )}
+              {isZonalAdmin && (
+                <button
+                  type="button"
+                  onClick={() => handleDownloadTemplate('zone')}
+                  className="secondary-button"
+                  style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+                >
+                  <Download size={14} />
+                  <span>Master Zonal Template (Group + Church)</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* BULK TARGET CHURCH / OVERRIDE SELECTOR */}
+          {(isGroupAdmin || isZonalAdmin) && (
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid #1e3a2f', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ fontSize: '0.85rem', color: '#FFD700', margin: 0, textTransform: 'uppercase' }}>
+                  🎯 Default Target Church for Upload Batch
+                </h4>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#94a3b8', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={overrideChurch}
+                    onChange={(e) => setOverrideChurch(e.target.checked)}
+                  />
+                  <span>Assign all rows in CSV to selected Church</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isZonalAdmin ? '1fr 1fr' : '1fr', gap: '12px' }}>
+                {isZonalAdmin && (
+                  <div className="form-group">
+                    <label className="form-label">TARGET GROUP</label>
+                    <select
+                      value={bulkTargetGroupId}
+                      onChange={(e) => handleBulkGroupChange(e.target.value)}
+                      className="form-input"
+                      style={{ paddingLeft: '14px', appearance: 'auto' }}
+                    >
+                      {availableGroups.map((g) => (
+                        <option key={g.id} value={g.id} style={{ background: '#0d1f18', color: '#fff' }}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="form-group">
+                  <label className="form-label">TARGET CHURCH</label>
+                  <select
+                    value={bulkTargetChurchId}
+                    onChange={(e) => setBulkTargetChurchId(e.target.value)}
+                    className="form-input"
+                    style={{ paddingLeft: '14px', appearance: 'auto' }}
+                  >
+                    {getChurchesForGroup(bulkTargetGroupId).map((c) => (
+                      <option key={c.id} value={c.id} style={{ background: '#0d1f18', color: '#fff' }}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* UPLOAD FILE & PASTE INPUT */}
+          <div className="form-group">
+            <label className="form-label">SELECT CSV FILE TO UPLOAD</label>
+            <input
+              type="file"
+              accept=".csv,.txt"
+              onChange={handleFileUpload}
+              className="form-input"
+              style={{ padding: '8px 12px', background: '#0d1f18' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">OR PASTE CSV DATA DIRECTLY</label>
+            <textarea
+              value={csvRawText}
+              onChange={(e) => handleParseCsvContent(e.target.value)}
+              placeholder={`Soul Name,Phone,Location,Notes\nJohn Doe,08012345678,Gwarinpa Estate,First timer\nJane Smith,08087654321,Wuye Market,Outreach convert`}
+              className="form-input"
+              rows={4}
+              style={{ paddingLeft: '14px', paddingTop: '10px', fontFamily: 'monospace', fontSize: '0.8rem' }}
+            />
+          </div>
+
+          {/* BULK NOTIFICATIONS */}
+          {bulkCommitSuccess && (
+            <div className="banner banner-success" role="status" style={{ marginTop: '16px' }}>
+              <CheckCircle2 size={18} />
+              <div>
+                <strong>SUCCESS</strong>
+                <p className="banner-subtext">{bulkCommitSuccess}</p>
+              </div>
+            </div>
+          )}
+
+          {bulkCommitError && (
+            <div className="banner banner-error" role="status" style={{ marginTop: '16px' }}>
+              <AlertCircle size={18} />
+              <div>
+                <strong>ERROR</strong>
+                <p className="banner-subtext">{bulkCommitError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* PREVIEW SUMMARY TABLE */}
+          {parsedRows.length > 0 && (
+            <div style={{ marginTop: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ fontSize: '0.95rem', margin: 0, color: '#ffffff' }}>
+                  FILE VALIDATION PREVIEW ({parsedRows.length} ROWS)
+                </h4>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem' }}>
+                  <span style={{ color: '#4ade80', fontWeight: 'bold' }}>✓ Valid: {validRowsCount}</span>
+                  {invalidRowsCount > 0 && (
+                    <span style={{ color: '#ef4444', fontWeight: 'bold' }}>✗ Errors: {invalidRowsCount}</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #1e3a2f', borderRadius: '8px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: '#142920', color: '#FFD700', borderBottom: '1px solid #1e3a2f' }}>
+                      <th style={{ padding: '8px 12px' }}>#</th>
+                      <th style={{ padding: '8px 12px' }}>STATUS</th>
+                      <th style={{ padding: '8px 12px' }}>NAME</th>
+                      <th style={{ padding: '8px 12px' }}>PHONE</th>
+                      <th style={{ padding: '8px 12px' }}>LOCATION</th>
+                      <th style={{ padding: '8px 12px' }}>CHURCH</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedRows.map((row) => (
+                      <tr
+                        key={row.rowIndex}
+                        style={{
+                          borderBottom: '1px solid #1e3a2f',
+                          background: row.isValid ? 'transparent' : 'rgba(239, 68, 68, 0.1)',
+                        }}
+                      >
+                        <td style={{ padding: '8px 12px', color: '#94a3b8' }}>{row.rowIndex}</td>
+                        <td style={{ padding: '8px 12px' }}>
+                          {row.isValid ? (
+                            <span style={{ color: '#4ade80', fontWeight: 'bold' }}>✓ Valid</span>
+                          ) : (
+                            <span style={{ color: '#ef4444', fontWeight: 'bold' }}>✗ {row.error}</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 12px', color: '#ffffff', fontWeight: 'bold' }}>{row.name}</td>
+                        <td style={{ padding: '8px 12px', color: '#cbd5e1' }}>{row.phone}</td>
+                        <td style={{ padding: '8px 12px', color: '#cbd5e1' }}>{row.location}</td>
+                        <td style={{ padding: '8px 12px', color: '#FFD700' }}>
+                          {row.churchName || DEFAULT_CHURCHES.find((c) => c.id === bulkTargetChurchId)?.name || 'Default'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCommitBulk}
+                disabled={validRowsCount === 0 || isCommitingBulk}
+                className="submit-button"
+                style={{ marginTop: '16px' }}
+              >
+                <Upload size={18} />
+                <span>
+                  {isCommitingBulk
+                    ? 'COMMITTING BULK IMPORT...'
+                    : `COMMIT BULK IMPORT (${validRowsCount} VALID SOULS)`}
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ================= TAB 3: SUBMISSIONS HISTORY ================= */}
+      {activeTab === 'history' && (
+        <div className="account-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 className="form-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileText size={20} className="text-green-accent" />
+              <span>RECORDED SOULS HISTORY</span>
+            </h3>
+            <span style={{ fontSize: '0.85rem', color: '#FFD700', fontWeight: 'bold' }}>
+              TOTAL RECORDED: {records.length} SOULS
+            </span>
+          </div>
+
+          {records.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+              <User size={32} style={{ opacity: 0.5, marginBottom: '8px' }} />
+              <p>No souls recorded yet in this session.</p>
+            </div>
+          ) : (
+            <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #1e3a2f', borderRadius: '8px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: '#142920', color: '#FFD700', borderBottom: '1px solid #1e3a2f' }}>
+                    <th style={{ padding: '10px 14px' }}>NAME</th>
+                    <th style={{ padding: '10px 14px' }}>PHONE</th>
+                    <th style={{ padding: '10px 14px' }}>LOCATION</th>
+                    <th style={{ padding: '10px 14px' }}>CHURCH</th>
+                    <th style={{ padding: '10px 14px' }}>DATE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((r) => (
+                    <tr key={r.id} style={{ borderBottom: '1px solid #1e3a2f' }}>
+                      <td style={{ padding: '10px 14px', color: '#ffffff', fontWeight: 'bold' }}>{r.name}</td>
+                      <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>{r.phone}</td>
+                      <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>{r.location}</td>
+                      <td style={{ padding: '10px 14px', color: '#4ade80' }}>{r.churchName || 'Church'}</td>
+                      <td style={{ padding: '10px 14px', color: '#94a3b8' }}>
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
