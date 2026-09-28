@@ -11,6 +11,9 @@ export const DevRoleSwitcher: React.FC = () => {
   const [seedSuccess, setSeedSuccess] = useState<boolean>(false);
 
   const handleRoleSelect = (targetRole: UserRole | 'pending' | 'logout') => {
+    if (targetRole === 'logout') {
+      sessionStorage.setItem('ron_just_logged_out', 'true');
+    }
     setDevRole(targetRole);
     // Reload window to ensure fresh state across all hooks and services
     window.location.reload();

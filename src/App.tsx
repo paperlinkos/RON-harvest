@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { StatusBanner } from './components/StatusBanner';
@@ -47,6 +47,25 @@ const MainContent: React.FC = () => {
   const { isAuthenticated, userProfile, isActiveSoulWinner, isPendingAssignment } = useAuth();
 
   const { eventConfig } = useEventConfig();
+
+  const prevAuthRef = useRef<boolean>(isAuthenticated);
+
+  // Automatically trigger Sign In modal whenever user logs out
+  useEffect(() => {
+    if (prevAuthRef.current && !isAuthenticated) {
+      setAuthModalState({ isOpen: true, mode: 'login' });
+      setActiveTab('home');
+    }
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated]);
+
+  // Handle logout via reload (e.g. Dev Role Switcher)
+  useEffect(() => {
+    if (sessionStorage.getItem('ron_just_logged_out')) {
+      sessionStorage.removeItem('ron_just_logged_out');
+      setAuthModalState({ isOpen: true, mode: 'login' });
+    }
+  }, []);
 
   const handleOpenAuth = (mode: 'login' | 'signup') => {
     setAuthModalState({ isOpen: true, mode });
