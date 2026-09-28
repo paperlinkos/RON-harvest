@@ -45,7 +45,7 @@ const MainContent: React.FC = () => {
     manualSync,
   } = useSoulRecords();
 
-  const { isAuthenticated, userProfile, isActiveSoulWinner, isPendingAssignment } = useAuth();
+  const { isAuthenticated, userProfile, role } = useAuth();
 
   const { eventConfig } = useEventConfig();
 
@@ -73,14 +73,13 @@ const MainContent: React.FC = () => {
   };
 
   const handleSelectTab = (tab: TabType) => {
-    if (tab === 'record' && !isAuthenticated) {
-      handleOpenAuth('signup');
-      return;
-    }
+    setActiveTab(tab);
     if (tab === 'record') {
       setRecordSubTab('form');
+      if (!isAuthenticated) {
+        handleOpenAuth('signup');
+      }
     }
-    setActiveTab(tab);
   };
 
   return (
@@ -148,59 +147,38 @@ const MainContent: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ) : isPendingAssignment ? (
-                <div className="account-card empty-card">
-                  <Lock size={32} className="text-gold" />
-                  <h3 className="account-title">Account Pending Assignment</h3>
-                  <p className="account-lead">
-                    Your registration is complete! An administrator or PCF Leader will assign your PCF, Church, Group, and Zone before recording souls is enabled.
-                  </p>
-                  <button onClick={() => setActiveTab('account')} className="submit-button">
-                    View My Account Status
-                  </button>
-                </div>
-              ) : isActiveSoulWinner ? (
-                role === 'churchManager' || role === 'groupManager' || role === 'zoneManager' || role === 'superAdmin' || role === 'pcfLeader' ? (
-                  <LeaderSoulEntryView />
-                ) : (
-                  <div className="record-container">
-                    <div className="record-subnav">
-                      <button
-                        type="button"
-                        onClick={() => setRecordSubTab('form')}
-                        className={`subtab-btn ${recordSubTab === 'form' ? 'subtab-active' : ''}`}
-                      >
-                        RECORD SOUL
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRecordSubTab('history')}
-                        className={`subtab-btn ${recordSubTab === 'history' ? 'subtab-active' : ''}`}
-                      >
-                        MY SUBMISSIONS ({records.length})
-                      </button>
-                    </div>
-
-                    {recordSubTab === 'form' ? (
-                      <SoulRecordForm
-                        onSubmit={submitRecord}
-                        isSubmitting={isSubmitting}
-                        mySoulsWon={records.length}
-                        onViewHistory={() => setRecordSubTab('history')}
-                        eventStatus={eventConfig.status}
-                      />
-                    ) : (
-                      <RecentSubmissions records={records} isLoading={isLoading} />
-                    )}
-                  </div>
-                )
+              ) : role === 'churchManager' || role === 'groupManager' || role === 'zoneManager' || role === 'superAdmin' || role === 'pcfLeader' ? (
+                <LeaderSoulEntryView />
               ) : (
-                <div className="account-card empty-card">
-                  <Lock size={32} className="text-error" />
-                  <h3 className="account-title">Recording Unavailable</h3>
-                  <p className="account-lead">
-                    Your account is currently {userProfile?.status}. Recording is unavailable.
-                  </p>
+                <div className="record-container">
+                  <div className="record-subnav">
+                    <button
+                      type="button"
+                      onClick={() => setRecordSubTab('form')}
+                      className={`subtab-btn ${recordSubTab === 'form' ? 'subtab-active' : ''}`}
+                    >
+                      RECORD SOUL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecordSubTab('history')}
+                      className={`subtab-btn ${recordSubTab === 'history' ? 'subtab-active' : ''}`}
+                    >
+                      MY SUBMISSIONS ({records.length})
+                    </button>
+                  </div>
+
+                  {recordSubTab === 'form' ? (
+                    <SoulRecordForm
+                      onSubmit={submitRecord}
+                      isSubmitting={isSubmitting}
+                      mySoulsWon={records.length}
+                      onViewHistory={() => setRecordSubTab('history')}
+                      eventStatus={eventConfig.status}
+                    />
+                  ) : (
+                    <RecentSubmissions records={records} isLoading={isLoading} />
+                  )}
                 </div>
               )}
             </>
