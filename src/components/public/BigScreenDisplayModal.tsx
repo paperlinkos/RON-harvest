@@ -191,11 +191,6 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
             {/* STATUS BADGE */}
             <div className="big-screen-status-row">
-              {isUpcoming && (
-                <span className="big-status-pill upcoming-badge">
-                  <Clock size={16} /> UPCOMING
-                </span>
-              )}
               {isLive && (
                 <span className="big-status-pill live-badge">
                   <span className="live-dot" /> LIVE EVENT

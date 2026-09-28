@@ -60,11 +60,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
           </h2>
 
           <div className="live-status-pill">
-            {isUpcoming && (
-              <span className="pill-status-text upcoming-badge">
-                <Clock size={14} /> UPCOMING
-              </span>
-            )}
             {isLive && (
               <span className="pill-status-text live-badge">
                 <span className="live-dot" /> LIVE
@@ -77,14 +72,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
             )}
           </div>
         </div>
-
-        {/* UPCOMING COUNTDOWN DISPLAY */}
-        {isUpcoming && (
-          <div className="countdown-container">
-            <span className="countdown-label">STARTS IN</span>
-            <div className="countdown-digits">{countdown.formatted}</div>
-          </div>
-        )}
 
         {/* Digital 7-Segment Digit Counter */}
         <FlipCounterDisplay value={counterData.totalSoulsWon} />
