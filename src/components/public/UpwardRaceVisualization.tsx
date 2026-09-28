@@ -133,7 +133,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 const colorConfig = getBarColorConfig(comp.percentage);
 
                 const isMyGroup = Boolean(
-                  (highlightGroupId && (comp.id === highlightGroupId || comp.organizationId === highlightGroupId)) ||
+                  (highlightGroupId && comp.id === highlightGroupId) ||
                   (highlightGroupName && (comp.name.toLowerCase().includes(highlightGroupName.toLowerCase()) || (comp.code && highlightGroupName.toLowerCase().includes(comp.code.toLowerCase()))))
                 );
 

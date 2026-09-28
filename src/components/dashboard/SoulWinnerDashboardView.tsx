@@ -5,12 +5,8 @@ import {
   Trophy,
   Church,
   Building2,
-  ArrowRight,
   TrendingUp,
-  CheckCircle2,
-  Clock,
   Search,
-  PlusCircle,
   Zap,
   Flame,
 } from 'lucide-react';
@@ -30,7 +26,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
   const [churchRecordsCount, setChurchRecordsCount] = useState<number>(0);
   const [groupRecordsCount, setGroupRecordsCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
 
   const loadData = async () => {
     try {
@@ -54,8 +49,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
       setGroupRecordsCount(Math.max(groupRecs.length, churchRecs.length, mine.length));
     } catch (err) {
       console.warn('Error loading soul winner dashboard data:', err);
-    } finally {
-      setLoading(false);
     }
   };
 

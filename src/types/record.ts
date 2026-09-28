@@ -45,6 +45,7 @@ export interface SoulWinningRecord {
 
   churchName?: string;
   groupName?: string;
+  zoneName?: string;
 }
 
 export interface FormSubmissionData {

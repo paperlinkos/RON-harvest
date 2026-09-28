@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, Tv } from 'lucide-react';
+import { CheckCircle2, Tv } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Phone, LogOut, Shield, Clock, CheckCircle2, Building2, Wrench, AlertTriangle } from 'lucide-react';
+import { User, Phone, LogOut, Shield, CheckCircle2, Building2, Wrench, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { assignSoulWinnerHierarchy } from '../../services/userService';
 
@@ -13,7 +13,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
     userProfile,
     soulWinnerProfile,
     isAuthenticated,
-    isPendingAssignment,
     logout,
     refreshProfile,
   } = useAuth();

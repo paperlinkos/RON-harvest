@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minimize2, CheckCircle2, Clock, Layers, BarChart2, Church, Trophy, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Layers, BarChart2, Church, Trophy, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { getAllLocalRecords } from '../../services/indexedDbService';
@@ -103,7 +103,6 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isUpcoming = eventStatus === 'upcoming';
   const isLive = eventStatus === 'live';
   const isCompleted = eventStatus === 'completed';
 
@@ -382,7 +381,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
 
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '12px' }}>
-                      {filtered.map((c, idx) => {
+                      {filtered.map((c) => {
                         const originalIndex = churchStandings.findIndex((orig) => orig.id === c.id);
                         const cRank = originalIndex === 0 ? '🥇 1st' : originalIndex === 1 ? '🥈 2nd' : originalIndex === 2 ? '🥉 3rd' : `#${originalIndex + 1}`;
                         const rankColor = originalIndex === 0 ? '#FFD700' : originalIndex === 1 ? '#C0C0C0' : originalIndex === 2 ? '#CD7F32' : '#94a3b8';
@@ -393,7 +392,7 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              justify: 'space-between',
+                              justifyContent: 'space-between',
                               padding: '12px 16px',
                               background: 'rgba(255, 255, 255, 0.05)',
                               borderRadius: '10px',

@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   Users,
   Building,
-  HeartHandshake,
-  ArrowRight,
   ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';

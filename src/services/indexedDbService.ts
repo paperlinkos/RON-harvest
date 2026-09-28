@@ -78,3 +78,9 @@ export async function getLocalRecordById(id: string): Promise<SoulWinningRecord 
   const db = await getDB();
   return db.get('soul_records', id);
 }
+
+/** Delete a single local record by ID */
+export async function deleteLocalRecord(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('soul_records', id);
+}

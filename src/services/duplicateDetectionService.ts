@@ -251,7 +251,7 @@ export async function checkSingleRecordDuplicate(
 }
 
 /** Resolve duplicate group by deleting redundant duplicate records */
-export async function resolveDeleteDuplicates(primaryRecordId: string, duplicateRecordIds: string[]): Promise<void> {
+export async function resolveDeleteDuplicates(duplicateRecordIds: string[]): Promise<void> {
   for (const dupId of duplicateRecordIds) {
     await deleteLocalRecord(dupId);
   }

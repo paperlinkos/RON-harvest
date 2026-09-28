@@ -322,7 +322,7 @@ export const UpwardRaceView: React.FC = () => {
                                     style={{
                                       display: 'flex',
                                       alignItems: 'center',
-                                      justify: 'space-between',
+                                      justifyContent: 'space-between',
                                       padding: '10px 14px',
                                       background: '#f8fafc',
                                       borderRadius: '8px',

@@ -5,7 +5,6 @@ import { subscribeToSyncStatus } from './syncService';
 import { getGroups, getChurches } from './organizationService';
 import { getTargets, subscribeToTargets } from './targetService';
 import { calculateOrganizationProgress, calculateGroupRaceProgress, calculateChurchRaceProgress } from './targetProgressEngine';
-import type { Group, Church } from '../types/organization';
 import type { OrganizationProgress } from '../types/target';
 
 export interface GroupRaceCompetitor {

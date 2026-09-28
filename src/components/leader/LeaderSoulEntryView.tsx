@@ -11,12 +11,7 @@ import {
   User,
   Phone,
   MapPin,
-  Search,
   FileText,
-  RefreshCw,
-  Layers,
-  Sparkles,
-  Check,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSoulRecords } from '../../hooks/useSoulRecords';
@@ -45,7 +40,7 @@ interface ParsedSoulRow {
 
 export const LeaderSoulEntryView: React.FC = () => {
   const { userProfile, soulWinnerProfile, role } = useAuth();
-  const { records, submitRecord, isSubmitting } = useSoulRecords();
+  const { records } = useSoulRecords();
 
   const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'history'>('single');
 

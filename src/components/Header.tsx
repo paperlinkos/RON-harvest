@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, WifiOff, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { WifiOff, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { isSyncActive } from '../services/syncService';
 

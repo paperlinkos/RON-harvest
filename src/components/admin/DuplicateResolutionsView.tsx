@@ -11,8 +11,6 @@ import {
   MapPin,
   Church as ChurchIcon,
   Calendar,
-  AlertTriangle,
-  Sparkles,
 } from 'lucide-react';
 import {
   detectDuplicateSouls,
@@ -20,7 +18,6 @@ import {
   resolveMergeRecords,
   resolveMarkAsUnique,
   type DuplicateResolutionReport,
-  type DuplicateGroup,
 } from '../../services/duplicateDetectionService';
 import type { SoulWinningRecord } from '../../types/record';
 
@@ -48,9 +45,9 @@ export const DuplicateResolutionsView: React.FC = () => {
     runScan();
   }, []);
 
-  const handleDeleteDuplicate = async (primaryId: string, dupId: string, name: string) => {
+  const handleDeleteDuplicate = async (dupId: string, name: string) => {
     try {
-      await resolveDeleteDuplicates(primaryId, [dupId]);
+      await resolveDeleteDuplicates([dupId]);
       setActionSuccess(`Successfully deleted duplicate record for "${name}".`);
       await runScan();
     } catch (err) {
@@ -324,7 +321,7 @@ export const DuplicateResolutionsView: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteDuplicate(group.primaryRecord.id, dup.id, dup.name)}
+                          onClick={() => handleDeleteDuplicate(dup.id, dup.name)}
                           style={{
                             padding: '6px 10px',
                             borderRadius: '6px',
