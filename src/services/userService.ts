@@ -67,13 +67,24 @@ export async function writeAdminAuditLog(
 }
 
 /** Create new user profile in Firestore */
-export async function createUserProfile(profile: UserProfile): Promise<void> {
+export async function createUserProfile(
+  profile: UserProfile,
+  soulWinnerData?: Partial<SoulWinnerProfile>
+): Promise<void> {
   const docRef = doc(db, 'users', profile.id);
   await setDoc(docRef, profile, { merge: true });
 
   const swProfile: SoulWinnerProfile = {
     id: profile.id,
     userId: profile.id,
+    zoneId: soulWinnerData?.zoneId || 'zone-abuja-1',
+    zoneName: soulWinnerData?.zoneName || 'Abuja Zone 1',
+    groupId: soulWinnerData?.groupId,
+    groupName: soulWinnerData?.groupName,
+    churchId: soulWinnerData?.churchId,
+    churchName: soulWinnerData?.churchName,
+    pcfId: soulWinnerData?.pcfId,
+    pcfName: soulWinnerData?.pcfName,
     status: profile.status,
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,

@@ -15,6 +15,7 @@ import {
   clearCachedProfiles,
   getCachedLocalProfiles,
 } from '../services/userService';
+import { DEFAULT_GROUPS, DEFAULT_CHURCHES } from '../services/organizationService';
 import type { UserProfile, SoulWinnerProfile, UserRole, AccountStatus } from '../types/auth';
 
 interface AuthContextType {
@@ -27,7 +28,14 @@ interface AuthContextType {
   isActiveSoulWinner: boolean;
   isPendingAssignment: boolean;
   isLoading: boolean;
-  signup: (name: string, email: string, phone: string, pass: string) => Promise<void>;
+  signup: (
+    name: string,
+    email: string,
+    phone: string,
+    pass: string,
+    groupId?: string,
+    churchId?: string
+  ) => Promise<void>;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -82,9 +90,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const signup = async (name: string, email: string, phone: string, pass: string) => {
+  const signup = async (
+    name: string,
+    email: string,
+    phone: string,
+    pass: string,
+    groupId?: string,
+    churchId?: string
+  ) => {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     const nowIso = new Date().toISOString();
+
+    const groupObj = DEFAULT_GROUPS.find((g) => g.id === groupId);
+    const churchObj = DEFAULT_CHURCHES.find((c) => c.id === churchId);
 
     const newProfile: UserProfile = {
       id: cred.user.uid,
@@ -92,12 +110,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
       role: 'soulWinner',
-      status: 'pendingAssignment',
+      status: 'active',
       createdAt: nowIso,
       updatedAt: nowIso,
     };
 
-    await createUserProfile(newProfile);
+    const swData: Partial<SoulWinnerProfile> = {
+      zoneId: 'zone-abuja-1',
+      zoneName: 'Abuja Zone 1',
+      groupId: groupObj?.id || groupId,
+      groupName: groupObj?.name,
+      churchId: churchObj?.id || churchId,
+      churchName: churchObj?.name,
+    };
+
+    await createUserProfile(newProfile, swData);
     await loadProfiles(cred.user.uid);
   };
 

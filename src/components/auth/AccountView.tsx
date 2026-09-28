@@ -81,18 +81,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ onOpenAuth }) => {
       </div>
 
       {/* STATUS BADGES & BANNERS */}
-      {isPendingAssignment && (
-        <div className="banner banner-offline" role="status">
-          <Clock size={18} />
-          <div>
-            <strong>Status: Pending Organizational Assignment</strong>
-            <p className="banner-subtext">
-              Your registration is complete! An administrator or PCF Leader will assign your PCF, Church, Group, and Zone shortly.
-            </p>
-          </div>
-        </div>
-      )}
-
       {userProfile.status === 'active' && (
         <div className="banner banner-success" role="status">
           <CheckCircle2 size={18} />

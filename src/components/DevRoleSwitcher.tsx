@@ -183,21 +183,6 @@ export const DevRoleSwitcher: React.FC = () => {
               ✨ Active Winner
             </button>
             <button
-              onClick={() => handleRoleSelect('pending')}
-              style={{
-                padding: '8px',
-                borderRadius: '8px',
-                border: '1px solid #1e3a2f',
-                background: status === 'pendingAssignment' ? '#008751' : '#142920',
-                color: '#fff',
-                fontSize: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              ⏳ Pending User
-            </button>
-            <button
               onClick={() => handleRoleSelect('logout')}
               style={{
                 padding: '8px',
