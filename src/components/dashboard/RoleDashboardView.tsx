@@ -13,13 +13,15 @@ import { useAuth } from '../../context/AuthContext';
 import { getDashboardViewData, type DashboardViewData, type BreadcrumbItem } from '../../services/dashboardService';
 import type { TargetLevel } from '../../types/target';
 
+import { SoulWinnerDashboardView } from './SoulWinnerDashboardView';
+
 interface RoleDashboardViewProps {
   onNavigateTab: (tab: 'home' | 'record' | 'account' | 'org' | 'race' | 'about') => void;
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
 export const RoleDashboardView: React.FC<RoleDashboardViewProps> = ({ onNavigateTab, onOpenAuth }) => {
-  const { userProfile, soulWinnerProfile, isAuthenticated } = useAuth();
+  const { userProfile, soulWinnerProfile, isAuthenticated, role } = useAuth();
   
   const [data, setData] = useState<DashboardViewData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -74,64 +76,15 @@ export const RoleDashboardView: React.FC<RoleDashboardViewProps> = ({ onNavigate
     );
   }
 
+  // Soul Winner Dedicated Rich Dashboard View
+  if (role === 'soulWinner' || data?.userScope.level === 'soulWinner') {
+    return <SoulWinnerDashboardView onNavigateTab={onNavigateTab} />;
+  }
+
   if (loading || !data) {
     return (
       <div className="account-card empty-card">
         <p className="loading-text">Loading dashboard progress...</p>
-      </div>
-    );
-  }
-
-  // Soul Winner Individual View
-  if (data.userScope.level === 'soulWinner' && data.activeLevel === 'pcf' && data.soulWinners) {
-    const myContribution = data.soulWinners.find((w) => w.id === userProfile?.id) || {
-      id: userProfile?.id || '',
-      name: userProfile?.name || 'Soul Winner',
-      soulsWon: data.actual,
-    };
-
-    return (
-      <div className="dashboard-container">
-        {/* SOUL WINNER PERSONAL HERO */}
-        <div className="account-card dashboard-hero-card">
-          <div className="hero-badge">
-            <HeartHandshake size={14} />
-            <span>MY SOUL WINNING PROGRESS</span>
-          </div>
-
-          <div className="dashboard-hero-header">
-            <h2 className="dashboard-org-title">{myContribution.name}</h2>
-            <p className="dashboard-org-subtitle">
-              Connected Church: {soulWinnerProfile?.churchName || 'Abuja Cathedral'}
-            </p>
-          </div>
-
-          <div className="dashboard-stats-grid">
-            <div className="dash-stat-box">
-              <span className="stat-label">MY SOULS WON</span>
-              <span className="stat-value text-green">{myContribution.soulsWon.toLocaleString()}</span>
-            </div>
-
-            <div className="dash-stat-divider" />
-
-            <div className="dash-stat-box">
-              <span className="stat-label">MY TARGET</span>
-              <span className="stat-value">{data.target > 0 ? data.target.toLocaleString() : '10'}</span>
-            </div>
-
-            <div className="dash-stat-divider" />
-
-            <div className="dash-stat-box">
-              <span className="stat-label">MY PROGRESS</span>
-              <span className="stat-value text-green">{data.displayPercentage}</span>
-            </div>
-          </div>
-
-          <button onClick={() => onNavigateTab('record')} className="btn-green-accent btn-large" style={{ marginTop: '16px' }}>
-            <span>RECORD A SOUL NOW</span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
       </div>
     );
   }
