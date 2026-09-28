@@ -163,15 +163,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
           </div>
           {!isCollapsed && <span>MY ACCOUNT</span>}
         </button>
-
-        <button
-          onClick={() => onSelectTab('about')}
-          className={`sidebar-link ${activeTab === 'about' ? 'sidebar-link-active' : ''}`}
-          title="About Campaign"
-        >
-          <Info size={20} />
-          {!isCollapsed && <span>ABOUT</span>}
-        </button>
       </nav>
 
       {/* Sidebar Footer / User Account Section */}

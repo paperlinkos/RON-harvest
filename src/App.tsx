@@ -9,7 +9,6 @@ import { Navigation, type TabType } from './components/Navigation';
 import { Sidebar } from './components/Sidebar';
 import { PublicHomeView } from './components/public/PublicHomeView';
 import { UpwardRaceView } from './components/public/UpwardRaceView';
-import { AboutView } from './components/public/AboutView';
 import { AccountView } from './components/auth/AccountView';
 import { AuthModal } from './components/auth/AuthModal';
 import { OrganizationManager } from './components/admin/OrganizationManager';
@@ -119,10 +118,6 @@ const MainContent: React.FC = () => {
 
           {activeTab === 'race' && (
             <UpwardRaceView />
-          )}
-
-          {activeTab === 'about' && (
-            <AboutView onOpenAuth={handleOpenAuth} />
           )}
 
           {activeTab === 'dashboard' && (
