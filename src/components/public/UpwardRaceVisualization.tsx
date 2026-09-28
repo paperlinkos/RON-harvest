@@ -202,7 +202,6 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         }}
                       />
                     </div>
-                    </div>
 
                     {/* ALL LABELS PLACED UNDER THE BAR */}
                     <div
