@@ -161,13 +161,6 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
           transition: 'padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* TOP BAR */}
-        <div className="big-screen-header">
-          <div className="big-screen-brand">
-            <span className="big-screen-brand-title">CEAZ1 REACHOUT NIGERIA • LIVE CAMPAIGN DISPLAY</span>
-          </div>
-        </div>
-
         {/* PAGE 1: OVERALL COUNTER (STANDALONE HERO VIEW) */}
         {activePage === 'counter' && (
           <div className="big-screen-hero" style={{ margin: 'auto 0' }}>
@@ -206,14 +199,6 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
                 <span className="big-stat-label">% OF ZONAL TARGET</span>
                 <span className="big-stat-number text-green">{counterData.percentageAchieved}%</span>
               </div>
-            </div>
-
-            {/* PROGRESS FILL TRACK */}
-            <div className="big-screen-progress-track">
-              <div
-                className="big-screen-progress-fill"
-                style={{ width: `${Math.min(100, counterData.percentageAchieved)}%` }}
-              />
             </div>
           </div>
         )}
