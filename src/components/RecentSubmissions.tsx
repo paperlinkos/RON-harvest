@@ -68,6 +68,19 @@ export const RecentSubmissions: React.FC<RecentSubmissionsProps> = ({ records, i
                     {record.location}
                   </span>
                 </div>
+
+                <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                  {record.isBornAgain !== false && (
+                    <span style={{ fontSize: '0.68rem', background: 'rgba(0, 135, 81, 0.2)', color: '#4ade80', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(0, 135, 81, 0.4)', fontWeight: 'bold' }}>
+                      ✨ Born Again
+                    </span>
+                  )}
+                  {record.isFilledWithHolySpirit !== false && (
+                    <span style={{ fontSize: '0.68rem', background: 'rgba(255, 215, 0, 0.15)', color: '#FFD700', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(255, 215, 0, 0.4)', fontWeight: 'bold' }}>
+                      🔥 Spirit Filled
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="record-time">{formattedDate}</div>

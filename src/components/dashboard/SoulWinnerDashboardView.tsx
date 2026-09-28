@@ -268,6 +268,7 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
                   <th style={{ padding: '10px 14px' }}>SOUL NAME</th>
                   <th style={{ padding: '10px 14px' }}>PHONE</th>
                   <th style={{ padding: '10px 14px' }}>LOCATION</th>
+                  <th style={{ padding: '10px 14px' }}>SPIRITUAL MILESTONES</th>
                   <th style={{ padding: '10px 14px' }}>DATE RECORDED</th>
                   <th style={{ padding: '10px 14px' }}>STATUS</th>
                 </tr>
@@ -278,6 +279,20 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
                     <td style={{ padding: '10px 14px', color: '#ffffff', fontWeight: 'bold' }}>{r.name}</td>
                     <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>{r.phone}</td>
                     <td style={{ padding: '10px 14px', color: '#cbd5e1' }}>{r.location}</td>
+                    <td style={{ padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {r.isBornAgain !== false && (
+                          <span style={{ fontSize: '0.66rem', background: 'rgba(0, 135, 81, 0.25)', color: '#4ade80', padding: '1px 5px', borderRadius: '4px', border: '1px solid rgba(0, 135, 81, 0.4)', fontWeight: 'bold' }}>
+                            ✨ Born Again
+                          </span>
+                        )}
+                        {r.isFilledWithHolySpirit !== false && (
+                          <span style={{ fontSize: '0.66rem', background: 'rgba(255, 215, 0, 0.18)', color: '#FFD700', padding: '1px 5px', borderRadius: '4px', border: '1px solid rgba(255, 215, 0, 0.4)', fontWeight: 'bold' }}>
+                            🔥 Spirit Filled
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ padding: '10px 14px', color: '#94a3b8' }}>
                       {new Date(r.createdAt).toLocaleDateString()}
                     </td>

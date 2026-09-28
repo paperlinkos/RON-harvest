@@ -36,6 +36,8 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
     name: '',
     phone: '',
     location: '',
+    isBornAgain: true,
+    isFilledWithHolySpirit: true,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -88,7 +90,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
       setSuccessResult({
         isOffline: result.isOfflineSubmitted,
       });
-      setFormData({ name: '', phone: '', location: '' });
+      setFormData({ name: '', phone: '', location: '', isBornAgain: true, isFilledWithHolySpirit: true });
       setErrors({});
     } else if (result.errors) {
       setErrors(result.errors);
@@ -97,7 +99,7 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
 
   const handleResetForNext = () => {
     setSuccessResult(null);
-    setFormData({ name: '', phone: '', location: '' });
+    setFormData({ name: '', phone: '', location: '', isBornAgain: true, isFilledWithHolySpirit: true });
     setErrors({});
     setTimeout(() => {
       nameInputRef.current?.focus();
@@ -300,6 +302,70 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* 4. SPIRITUAL STATUS (BORN AGAIN & FILLED WITH THE SPIRIT) */}
+        <div className="form-group">
+          <label className="form-label">SPIRITUAL STATUS</label>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: formData.isBornAgain ? 'rgba(0, 135, 81, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                border: formData.isBornAgain ? '1.5px solid #008751' : '1px solid rgba(255, 255, 255, 0.12)',
+                cursor: 'pointer',
+                color: formData.isBornAgain ? '#4ade80' : '#94a3b8',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                userSelect: 'none',
+                flex: '1 1 140px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <input
+                type="checkbox"
+                name="isBornAgain"
+                checked={formData.isBornAgain ?? true}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isBornAgain: e.target.checked }))}
+                disabled={isSubmitting}
+                style={{ width: '18px', height: '18px', accentColor: '#008751', cursor: 'pointer' }}
+              />
+              <span>✨ Born Again</span>
+            </label>
+
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: formData.isFilledWithHolySpirit ? 'rgba(255, 215, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                border: formData.isFilledWithHolySpirit ? '1.5px solid #FFD700' : '1px solid rgba(255, 255, 255, 0.12)',
+                cursor: 'pointer',
+                color: formData.isFilledWithHolySpirit ? '#FFD700' : '#94a3b8',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                userSelect: 'none',
+                flex: '1 1 140px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <input
+                type="checkbox"
+                name="isFilledWithHolySpirit"
+                checked={formData.isFilledWithHolySpirit ?? true}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isFilledWithHolySpirit: e.target.checked }))}
+                disabled={isSubmitting}
+                style={{ width: '18px', height: '18px', accentColor: '#FFD700', cursor: 'pointer' }}
+              />
+              <span>🔥 Filled with The Spirit</span>
+            </label>
           </div>
         </div>
 

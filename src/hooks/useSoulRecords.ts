@@ -101,6 +101,8 @@ export function useSoulRecords() {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         location: formData.location.trim(),
+        isBornAgain: formData.isBornAgain ?? true,
+        isFilledWithHolySpirit: formData.isFilledWithHolySpirit ?? true,
         createdAt: nowIso,
         clientCreatedAt: nowIso,
         syncStatus: 'pending',

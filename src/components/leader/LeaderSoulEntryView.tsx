@@ -55,6 +55,8 @@ export const LeaderSoulEntryView: React.FC = () => {
   const [singleName, setSingleName] = useState<string>('');
   const [singlePhone, setSinglePhone] = useState<string>('');
   const [singleLocation, setSingleLocation] = useState<string>('');
+  const [singleIsBornAgain, setSingleIsBornAgain] = useState<boolean>(true);
+  const [singleIsFilledWithHolySpirit, setSingleIsFilledWithHolySpirit] = useState<boolean>(true);
   const [singleNotes, setSingleNotes] = useState<string>('');
   const [singleSuccess, setSingleSuccess] = useState<string | null>(null);
   const [singleError, setSingleError] = useState<string | null>(null);
@@ -138,6 +140,8 @@ export const LeaderSoulEntryView: React.FC = () => {
         name: singleName.trim(),
         phone: singlePhone.trim(),
         location: singleLocation.trim(),
+        isBornAgain: singleIsBornAgain,
+        isFilledWithHolySpirit: singleIsFilledWithHolySpirit,
         notes: singleNotes.trim() || undefined,
         createdAt: nowIso,
         clientCreatedAt: nowIso,
@@ -160,6 +164,8 @@ export const LeaderSoulEntryView: React.FC = () => {
       setSingleName('');
       setSinglePhone('');
       setSingleLocation('');
+      setSingleIsBornAgain(true);
+      setSingleIsFilledWithHolySpirit(true);
       setSingleNotes('');
     } catch (err) {
       console.error('Single submission error:', err);
@@ -585,6 +591,66 @@ export const LeaderSoulEntryView: React.FC = () => {
                   placeholder="e.g. Gwarinpa Estate Phase 2, Abuja"
                   className="form-input"
                 />
+              </div>
+            </div>
+
+            {/* SPIRITUAL STATUS */}
+            <div className="form-group">
+              <label className="form-label">SPIRITUAL MILESTONES</label>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    background: singleIsBornAgain ? 'rgba(0, 135, 81, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                    border: singleIsBornAgain ? '1.5px solid #008751' : '1px solid rgba(255, 255, 255, 0.12)',
+                    cursor: 'pointer',
+                    color: singleIsBornAgain ? '#4ade80' : '#94a3b8',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    userSelect: 'none',
+                    flex: '1 1 140px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={singleIsBornAgain}
+                    onChange={(e) => setSingleIsBornAgain(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: '#008751', cursor: 'pointer' }}
+                  />
+                  <span>✨ Born Again</span>
+                </label>
+
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    background: singleIsFilledWithHolySpirit ? 'rgba(255, 215, 0, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                    border: singleIsFilledWithHolySpirit ? '1.5px solid #FFD700' : '1px solid rgba(255, 255, 255, 0.12)',
+                    cursor: 'pointer',
+                    color: singleIsFilledWithHolySpirit ? '#FFD700' : '#94a3b8',
+                    fontWeight: 'bold',
+                    fontSize: '0.85rem',
+                    userSelect: 'none',
+                    flex: '1 1 140px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={singleIsFilledWithHolySpirit}
+                    onChange={(e) => setSingleIsFilledWithHolySpirit(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: '#FFD700', cursor: 'pointer' }}
+                  />
+                  <span>🔥 Filled with The Spirit</span>
+                </label>
               </div>
             </div>
 

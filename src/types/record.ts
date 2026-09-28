@@ -28,6 +28,10 @@ export interface SoulWinningRecord {
   /** Last error message if sync failed */
   syncError?: string;
 
+  // Spiritual status
+  isBornAgain?: boolean;
+  isFilledWithHolySpirit?: boolean;
+
   // Organizational hierarchy references automatically attached from Soul Winner profile
   soulWinnerId?: string;
   pcfId?: string;
@@ -37,10 +41,16 @@ export interface SoulWinningRecord {
 
   // Event reference
   eventId?: string;
+  notes?: string;
+
+  churchName?: string;
+  groupName?: string;
 }
 
 export interface FormSubmissionData {
   name: string;
   phone: string;
   location: string;
+  isBornAgain?: boolean;
+  isFilledWithHolySpirit?: boolean;
 }
