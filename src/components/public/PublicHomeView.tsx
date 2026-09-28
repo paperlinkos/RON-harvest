@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, Tv, Flame, Church, Trophy, Building2 } from 'lucide-react';
+import { CheckCircle2, Clock, Tv } from 'lucide-react';
 import { FlipCounterDisplay } from './FlipCounterDisplay';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
 import { useEventConfig } from '../../hooks/useEventConfig';
 import { useAuth } from '../../context/AuthContext';
-import { getAllLocalRecords } from '../../services/indexedDbService';
 
 interface PublicHomeViewProps {
   onNavigate?: (tab: 'home' | 'record' | 'account' | 'org' | 'race') => void;
@@ -15,7 +14,7 @@ interface PublicHomeViewProps {
 
 export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
   const { eventConfig, isLive, isCompleted } = useEventConfig();
-  const { isAuthenticated, userProfile, soulWinnerProfile } = useAuth();
+  const { isAuthenticated, soulWinnerProfile } = useAuth();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
 
   const [counterData, setCounterData] = useState<ZonalCounterData>({
@@ -27,18 +26,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
     groupProgresses: [],
   });
 
-  const [personalStats, setPersonalStats] = useState<{
-    soulsWon: number;
-    churchSoulsTotal: number;
-    churchContribPct: string;
-    groupContribPct: string;
-  }>({
-    soulsWon: 0,
-    churchSoulsTotal: 0,
-    churchContribPct: '0.0',
-    groupContribPct: '0.0',
-  });
-
   useEffect(() => {
     const unsubscribe = subscribeToNationalCounter(
       eventConfig.target,
@@ -46,51 +33,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
     );
     return () => unsubscribe();
   }, [eventConfig.target]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    async function fetchStats() {
-      try {
-        const allRecords = await getAllLocalRecords();
-        const userUid = userProfile?.id;
-        const churchId = soulWinnerProfile?.churchId || 'ch-ce-gwarinpa-1';
-        const groupId = soulWinnerProfile?.groupId || 'grp-gwarinpa';
-
-        // 1. Personal souls won count
-        const myRecs = allRecords.filter(
-          (r) => r.soulWinnerId === userUid || (userProfile?.email && r.phone?.includes(userProfile.email))
-        );
-        const count = myRecs.length > 0 ? myRecs.length : allRecords.length > 0 ? Math.min(allRecords.length, 5) : 0;
-
-        // 2. Church records total counter
-        const churchRecs = allRecords.filter(
-          (r) => r.churchId === churchId || r.churchName === soulWinnerProfile?.churchName
-        );
-        const churchTotal = Math.max(churchRecs.length, count);
-
-        // 3. Group records total
-        const groupRecs = allRecords.filter(
-          (r) => r.groupId === groupId || r.groupName === soulWinnerProfile?.groupName
-        );
-        const groupTotal = Math.max(groupRecs.length, churchTotal, 1);
-
-        const churchPct = churchTotal > 0 ? ((count / churchTotal) * 100).toFixed(1) : '0.0';
-        const groupPct = groupTotal > 0 ? ((count / groupTotal) * 100).toFixed(1) : '0.0';
-
-        setPersonalStats({
-          soulsWon: count,
-          churchSoulsTotal: churchTotal,
-          churchContribPct: churchPct,
-          groupContribPct: groupPct,
-        });
-      } catch (err) {
-        console.warn('Error computing home screen personal stats:', err);
-      }
-    }
-
-    fetchStats();
-  }, [isAuthenticated, userProfile, soulWinnerProfile]);
 
   return (
     <div className="public-home-container">
@@ -112,57 +54,6 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
           </button>
         )}
       </div>
-
-      {/* 4 SMALL SQUARE BADGES FOR LOGGED IN SOUL WINNERS ON HOME SCREEN */}
-      {isAuthenticated && (
-        <section className="home-badges-section">
-          <div className="home-badges-header">
-            <span className="badges-title-tag">MY CONTRIBUTION & CHURCH COUNTER</span>
-          </div>
-
-          <div className="home-square-badges-grid">
-            {/* SQUARE 1: NUMBER OF SOULS WON */}
-            <div className="square-badge-card badge-gold">
-              <div className="badge-card-icon-wrapper">
-                <Flame size={20} />
-              </div>
-              <div className="badge-card-value">{personalStats.soulsWon}</div>
-              <div className="badge-card-label">MY SOULS</div>
-              <span className="badge-card-subtext">Personal Total</span>
-            </div>
-
-            {/* SQUARE 2: MY CHURCH TOTAL SOULS COUNTER */}
-            <div className="square-badge-card badge-emerald">
-              <div className="badge-card-icon-wrapper">
-                <Building2 size={20} />
-              </div>
-              <div className="badge-card-value">{personalStats.churchSoulsTotal}</div>
-              <div className="badge-card-label">CHURCH TOTAL</div>
-              <span className="badge-card-subtext">{soulWinnerProfile?.churchName || 'Church'} Total</span>
-            </div>
-
-            {/* SQUARE 3: % OF SOULS CONTRIBUTED TO CHURCH GOAL */}
-            <div className="square-badge-card badge-green">
-              <div className="badge-card-icon-wrapper">
-                <Church size={20} />
-              </div>
-              <div className="badge-card-value">{personalStats.churchContribPct}%</div>
-              <div className="badge-card-label">CHURCH GOAL</div>
-              <span className="badge-card-subtext">My Share of Church</span>
-            </div>
-
-            {/* SQUARE 4: % OF SOULS CONTRIBUTED TO GROUP GOAL */}
-            <div className="square-badge-card badge-blue">
-              <div className="badge-card-icon-wrapper">
-                <Trophy size={20} />
-              </div>
-              <div className="badge-card-value">{personalStats.groupContribPct}%</div>
-              <div className="badge-card-label">GROUP GOAL</div>
-              <span className="badge-card-subtext">My Share of Group</span>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* DOMINANT DIGITAL LED COUNTER HERO */}
       <section className="counter-hero-section">

@@ -13,6 +13,7 @@ import {
   Search,
   PlusCircle,
   Zap,
+  Flame,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAllLocalRecords } from '../../services/indexedDbService';
@@ -174,77 +175,48 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
         </div>
       </div>
 
-      {/* METRIC CARDS & IMPACT STATS */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
-        {/* Card 1: My Souls Won */}
-        <div
-          style={{
-            background: 'rgba(13, 31, 24, 0.8)',
-            border: '1px solid rgba(0, 135, 81, 0.5)',
-            borderRadius: '14px',
-            padding: '18px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            <Trophy size={16} color="#FFD700" />
-            <span>MY SOULS WON</span>
+      {/* 4 SMALL SQUARE CONTRIBUTION & PROGRESS BADGES */}
+      <div className="home-square-badges-grid" style={{ marginBottom: '24px' }}>
+        {/* SQUARE 1: MY SOULS */}
+        <div className="square-badge-card badge-gold">
+          <div className="badge-card-icon-wrapper">
+            <Flame size={22} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#4ade80', margin: '6px 0' }}>
-            {mySoulsCount.toLocaleString()}
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            Personal Goal: {mySoulsCount} / {personalTarget} souls ({personalPct}%)
-          </div>
+          <div className="badge-card-value">{mySoulsCount.toLocaleString()}</div>
+          <div className="badge-card-label">MY SOULS</div>
+          <span className="badge-card-subtext">Personal Total</span>
         </div>
 
-        {/* Card 2: Church Contribution */}
-        <div
-          style={{
-            background: 'rgba(13, 31, 24, 0.8)',
-            border: '1px solid rgba(0, 135, 81, 0.5)',
-            borderRadius: '14px',
-            padding: '18px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            <Church size={16} color="#4ade80" />
-            <span>CHURCH CONTRIBUTION</span>
+        {/* SQUARE 2: CHURCH TOTAL COUNTER */}
+        <div className="square-badge-card badge-emerald">
+          <div className="badge-card-icon-wrapper">
+            <Building2 size={22} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#FFD700', margin: '6px 0' }}>
-            {churchContribPct}%
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            {mySoulsCount} of {churchRecordsCount} souls won in {soulWinnerProfile?.churchName || 'Church'}
-          </div>
+          <div className="badge-card-value">{churchRecordsCount.toLocaleString()}</div>
+          <div className="badge-card-label">CHURCH TOTAL</div>
+          <span className="badge-card-subtext">{soulWinnerProfile?.churchName || 'Church'} Total</span>
         </div>
 
-        {/* Card 3: Group Contribution */}
-        <div
-          style={{
-            background: 'rgba(13, 31, 24, 0.8)',
-            border: '1px solid rgba(0, 135, 81, 0.5)',
-            borderRadius: '14px',
-            padding: '18px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            <Building2 size={16} color="#38bdf8" />
-            <span>GROUP CONTRIBUTION</span>
+        {/* SQUARE 3: CHURCH GOAL % */}
+        <div className="square-badge-card badge-green">
+          <div className="badge-card-icon-wrapper">
+            <Church size={22} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#38bdf8', margin: '6px 0' }}>
-            {groupContribPct}%
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            {mySoulsCount} of {groupRecordsCount} souls won in {soulWinnerProfile?.groupName || 'Group'}
-          </div>
+          <div className="badge-card-value">{churchContribPct}%</div>
+          <div className="badge-card-label">CHURCH GOAL</div>
+          <span className="badge-card-subtext">My Share of Church</span>
         </div>
+
+        {/* SQUARE 4: GROUP GOAL % */}
+        <div className="square-badge-card badge-blue">
+          <div className="badge-card-icon-wrapper">
+            <Trophy size={22} />
+          </div>
+          <div className="badge-card-value">{groupContribPct}%</div>
+          <div className="badge-card-label">GROUP GOAL</div>
+          <span className="badge-card-subtext">My Share of Group</span>
+        </div>
+      </div>
 
         {/* Card 4: Achievement Badges */}
         <div
