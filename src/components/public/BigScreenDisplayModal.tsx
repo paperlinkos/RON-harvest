@@ -161,25 +161,10 @@ export const BigScreenDisplayModal: React.FC<BigScreenDisplayModalProps> = ({
           transition: 'padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* TOP BAR / CONTROL BUTTONS */}
+        {/* TOP BAR */}
         <div className="big-screen-header">
           <div className="big-screen-brand">
             <span className="big-screen-brand-title">CEAZ1 REACHOUT NIGERIA • LIVE CAMPAIGN DISPLAY</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '700' }}>
-              Press Keys 1, 2, 3 to switch views
-            </span>
-            <button
-              onClick={onClose}
-              className="big-screen-exit-btn"
-              title="Exit Big Screen Mode (Esc)"
-              aria-label="Exit Big Screen Mode"
-            >
-              <Minimize2 size={18} />
-              <span>EXIT DISPLAY MODE</span>
-            </button>
           </div>
         </div>
 
