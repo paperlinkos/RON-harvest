@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Sparkles, Tv, Flame } from 'lucide-react';
+import { Trophy, Sparkles, Tv, Flame, ChevronDown, ChevronUp, Church } from 'lucide-react';
 import { UpwardRaceVisualization } from './UpwardRaceVisualization';
 import { BigScreenDisplayModal } from './BigScreenDisplayModal';
 import { subscribeToNationalCounter, type ZonalCounterData } from '../../services/counterService';
@@ -8,6 +8,7 @@ import { useEventConfig } from '../../hooks/useEventConfig';
 export const UpwardRaceView: React.FC = () => {
   const { eventConfig } = useEventConfig();
   const [isDisplayModeOpen, setIsDisplayModeOpen] = useState<boolean>(false);
+  const [expandedGroupIds, setExpandedGroupIds] = useState<Record<string, boolean>>({});
 
   const [counterData, setCounterData] = useState<ZonalCounterData>({
     totalSoulsWon: 0,
@@ -28,6 +29,13 @@ export const UpwardRaceView: React.FC = () => {
 
   const competitors = counterData.groupCompetitors;
 
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroupIds((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
+
   return (
     <div className="public-home-container">
       {/* RACE HERO HEADER */}
@@ -42,7 +50,7 @@ export const UpwardRaceView: React.FC = () => {
               UPWARD RACE TO TARGET
             </h2>
             <p className="dashboard-org-subtitle" style={{ color: '#94a3b8' }}>
-              Vertical progress tracking for Groups & Churches competing to hit their Reach Out Nigeria soul targets.
+              Vertical progress tracking for Groups & Churches competing to hit their Reach Out Nigeria soul targets. Click any group to view its churches.
             </p>
           </div>
 
@@ -120,41 +128,168 @@ export const UpwardRaceView: React.FC = () => {
                   ? '🥉 3rd'
                   : `#${idx + 1}`;
 
+              const isExpanded = !!expandedGroupIds[comp.id];
+              const churchesCount = comp.churches ? comp.churches.length : 0;
+
               return (
-                <div key={comp.id} className="soul-winner-row-card" style={{ padding: '14px 18px' }}>
-                  <div className="sw-rank" style={{ fontSize: idx < 3 ? '1.1rem' : '0.9rem', fontWeight: '900', minWidth: '54px' }}>
-                    {rankBadge}
-                  </div>
+                <div key={comp.id} style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                  <div
+                    className={`soul-winner-row-card ${isExpanded ? 'group-row-expanded' : ''}`}
+                    onClick={() => toggleGroup(comp.id)}
+                    style={{
+                      padding: '14px 18px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderLeft: isExpanded ? '4px solid #008751' : '1px solid var(--color-card-border-public)',
+                      background: isExpanded ? 'rgba(0, 135, 81, 0.04)' : 'var(--color-bg-public)',
+                      boxShadow: isExpanded ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                    }}
+                    title="Click to view/hide churches under this group"
+                  >
+                    <div className="sw-rank" style={{ fontSize: idx < 3 ? '1.1rem' : '0.9rem', fontWeight: '900', minWidth: '54px' }}>
+                      {rankBadge}
+                    </div>
 
-                  <div className="sw-info">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className="sw-name">{comp.name}</span>
-                      {comp.code && (
-                        <span className="child-code">({comp.code})</span>
-                      )}
-                      {comp.isTargetExceeded && (
-                        <span className="exceeded-tag">
-                          <Sparkles size={11} /> TARGET EXCEEDED
+                    <div className="sw-info">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span className="sw-name">{comp.name}</span>
+                        {comp.code && (
+                          <span className="child-code">({comp.code})</span>
+                        )}
+                        {comp.isTargetExceeded && (
+                          <span className="exceeded-tag">
+                            <Sparkles size={11} /> TARGET EXCEEDED
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: '700',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            background: isExpanded ? '#008751' : 'rgba(0,0,0,0.06)',
+                            color: isExpanded ? '#ffffff' : '#64748b',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <Church size={11} />
+                          <span>{churchesCount} CHURCHES</span>
+                          {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                         </span>
+                      </div>
+
+                      <div className="child-progress-track" style={{ marginTop: '6px' }}>
+                        <div
+                          className="child-progress-fill"
+                          style={{ width: `${Math.min(100, comp.percentage)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <div className="child-pct-pill">
+                        <span>{comp.displayPercentage || `${comp.percentage}%`}</span>
+                      </div>
+                      <span className="child-code">
+                        {comp.soulsWon.toLocaleString()} / {comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* EXPANDABLE CHURCHES ACCORDION */}
+                  {isExpanded && (
+                    <div
+                      className="group-churches-dropdown"
+                      style={{
+                        margin: '4px 0 12px 28px',
+                        padding: '14px 16px',
+                        background: '#ffffff',
+                        borderRadius: '0 0 12px 12px',
+                        borderLeft: '3px solid #008751',
+                        borderRight: '1px solid #e2e8f0',
+                        borderBottom: '1px solid #e2e8f0',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.04)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px dashed #e2e8f0' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#008751', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <Church size={14} />
+                          <span>CHURCH STANDINGS IN {comp.name.toUpperCase()} ({churchesCount})</span>
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          Click group header to collapse
+                        </span>
+                      </div>
+
+                      {churchesCount === 0 ? (
+                        <div style={{ fontSize: '0.84rem', color: '#64748b', fontStyle: 'italic', padding: '8px 0', textAlign: 'center' }}>
+                          No churches currently assigned under this group.
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {comp.churches?.map((church, cIdx) => {
+                            const cRank = cIdx === 0 ? '🥇' : cIdx === 1 ? '🥈' : cIdx === 2 ? '🥉' : `#${cIdx + 1}`;
+                            return (
+                              <div
+                                key={church.id}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justify: 'space-between',
+                                  padding: '10px 14px',
+                                  background: '#f8fafc',
+                                  borderRadius: '8px',
+                                  border: '1px solid #f1f5f9',
+                                  gap: '12px',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#475569', minWidth: '28px' }}>
+                                    {cRank}
+                                  </span>
+                                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.88rem' }}>
+                                        {church.name}
+                                      </span>
+                                      {church.code && (
+                                        <span style={{ color: '#64748b', fontWeight: '500', fontSize: '0.78rem' }}>
+                                          ({church.code})
+                                        </span>
+                                      )}
+                                      {church.isTargetExceeded && (
+                                        <span className="exceeded-tag" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                                          EXCEEDED
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="child-progress-track" style={{ height: '6px', marginTop: '6px', width: '100%', maxWidth: '280px' }}>
+                                      <div
+                                        className="child-progress-fill"
+                                        style={{ width: `${Math.min(100, church.percentage)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', minWidth: '90px' }}>
+                                  <span style={{ fontWeight: '800', color: '#008751', fontSize: '0.88rem' }}>
+                                    {church.displayPercentage || `${church.percentage}%`}
+                                  </span>
+                                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                    {church.soulsWon.toLocaleString()} / {church.target > 0 ? church.target.toLocaleString() : 'Not Set'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
-
-                    <div className="child-progress-track" style={{ marginTop: '6px' }}>
-                      <div
-                        className="child-progress-fill"
-                        style={{ width: `${Math.min(100, comp.percentage)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <div className="child-pct-pill">
-                      <span>{comp.displayPercentage || `${comp.percentage}%`}</span>
-                    </div>
-                    <span className="child-code">
-                      {comp.soulsWon.toLocaleString()} / {comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls
-                    </span>
-                  </div>
+                  )}
                 </div>
               );
             })}
@@ -172,3 +307,4 @@ export const UpwardRaceView: React.FC = () => {
     </div>
   );
 };
+

@@ -2,10 +2,10 @@ import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAllLocalRecords } from './indexedDbService';
 import { subscribeToSyncStatus } from './syncService';
-import { getGroups } from './organizationService';
+import { getGroups, getChurches } from './organizationService';
 import { getTargets, subscribeToTargets } from './targetService';
-import { calculateOrganizationProgress, calculateGroupRaceProgress } from './targetProgressEngine';
-import type { Group } from '../types/organization';
+import { calculateOrganizationProgress, calculateGroupRaceProgress, calculateChurchRaceProgress } from './targetProgressEngine';
+import type { Group, Church } from '../types/organization';
 import type { OrganizationProgress } from '../types/target';
 
 export interface GroupRaceCompetitor {
@@ -19,6 +19,7 @@ export interface GroupRaceCompetitor {
   hasTarget: boolean;
   isTargetExceeded: boolean;
   displayPercentage: string;
+  churches?: GroupRaceCompetitor[];
 }
 
 export interface ZonalCounterData {
@@ -82,21 +83,39 @@ export function subscribeToZonalCounter(
       });
 
       // 2. Aggregate Group race progress using Target + Progress Engine
-      const groupsList: Group[] = await getGroups();
+      const [groupsList, churchesList] = await Promise.all([getGroups(), getChurches()]);
       const groupProgresses = calculateGroupRaceProgress(allRecords, groupsList, targetsList);
 
-      const groupCompetitors: GroupRaceCompetitor[] = groupProgresses.map((p) => ({
-        id: p.organizationId,
-        name: p.organizationName,
-        code: p.organizationCode || p.organizationName,
-        soulsWon: p.actual,
-        percentage: p.percentage,
-        normalizedProgress: p.normalizedProgress,
-        target: p.target,
-        hasTarget: p.hasTarget,
-        isTargetExceeded: p.isTargetExceeded,
-        displayPercentage: p.displayPercentage,
-      }));
+      const groupCompetitors: GroupRaceCompetitor[] = groupProgresses.map((p) => {
+        const churchProgresses = calculateChurchRaceProgress(allRecords, churchesList, targetsList, p.organizationId);
+        const churchCompetitors: GroupRaceCompetitor[] = churchProgresses.map((cp) => ({
+          id: cp.organizationId,
+          name: cp.organizationName,
+          code: cp.organizationCode || cp.organizationName,
+          soulsWon: cp.actual,
+          percentage: cp.percentage,
+          normalizedProgress: cp.normalizedProgress,
+          target: cp.target,
+          hasTarget: cp.hasTarget,
+          isTargetExceeded: cp.isTargetExceeded,
+          displayPercentage: cp.displayPercentage,
+        }));
+
+        return {
+          id: p.organizationId,
+          name: p.organizationName,
+          code: p.organizationCode || p.organizationName,
+          soulsWon: p.actual,
+          percentage: p.percentage,
+          normalizedProgress: p.normalizedProgress,
+          target: p.target,
+          hasTarget: p.hasTarget,
+          isTargetExceeded: p.isTargetExceeded,
+          displayPercentage: p.displayPercentage,
+          churches: churchCompetitors,
+        };
+      });
+
 
       if (isMounted) {
         onUpdate({

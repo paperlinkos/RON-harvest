@@ -1,5 +1,5 @@
 import type { Target, TargetLevel, OrganizationProgress } from '../types/target';
-import type { Group } from '../types/organization';
+import type { Group, Church } from '../types/organization';
 
 export interface CalculateProgressInput {
   organizationId: string;
@@ -101,3 +101,49 @@ export function calculateGroupRaceProgress(
 
   return results;
 }
+
+/**
+ * Calculates aggregate progress across churches (optionally filtered by groupId)
+ */
+export function calculateChurchRaceProgress(
+  records: Array<{ groupId?: string; churchId?: string }>,
+  churches: Church[],
+  targetsList: Target[],
+  groupId?: string,
+  defaultChurchTarget: number = 1000
+): OrganizationProgress[] {
+  const targetChurches = groupId ? churches.filter((c) => c.groupId === groupId) : churches;
+
+  const churchActualCounts = new Map<string, number>();
+  records.forEach((rec) => {
+    if (rec.churchId) {
+      churchActualCounts.set(rec.churchId, (churchActualCounts.get(rec.churchId) || 0) + 1);
+    }
+  });
+
+  const targetsMap = new Map<string, number>();
+  targetsList.forEach((t) => {
+    if (t.level === 'church' && t.status === 'active') {
+      targetsMap.set(t.organizationId, t.target);
+    }
+  });
+
+  const results: OrganizationProgress[] = targetChurches.map((c) => {
+    const actual = churchActualCounts.get(c.id) || 0;
+    const churchTarget = targetsMap.get(c.id) ?? defaultChurchTarget;
+
+    return calculateOrganizationProgress({
+      organizationId: c.id,
+      organizationName: c.name,
+      organizationCode: c.code,
+      level: 'church',
+      actual,
+      target: churchTarget,
+    });
+  });
+
+  results.sort((a, b) => b.percentage - a.percentage || b.actual - a.actual || a.organizationName.localeCompare(b.organizationName));
+
+  return results;
+}
+
