@@ -115,9 +115,9 @@ export const PublicHomeView: React.FC<PublicHomeViewProps> = () => {
         </div>
       </section>
 
-      {/* UPWARD RACE VISUALIZATION */}
+      {/* UPWARD RACE VISUALIZATION (BAR CHART VARIANT ON HOME SCREEN) */}
       <section className="upward-race-section">
-        <UpwardRaceVisualization competitors={counterData.groupCompetitors} />
+        <UpwardRaceVisualization competitors={counterData.groupCompetitors} variant="barChart" />
       </section>
 
       {/* BIG SCREEN / TV DISPLAY MODE MODAL */}
