@@ -238,7 +238,6 @@ export const SoulWinnerDashboardView: React.FC<SoulWinnerDashboardViewProps> = (
             {unlockedCount > 0 ? 'Keep winning souls to earn more!' : 'Record your first soul to unlock!'}
           </div>
         </div>
-      </div>
 
       {/* PROGRESS BARS COMPARISON */}
       <div className="account-card" style={{ marginBottom: '24px' }}>
