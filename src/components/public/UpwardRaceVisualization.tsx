@@ -6,6 +6,8 @@ interface UpwardRaceVisualizationProps {
   competitors: GroupRaceCompetitor[];
   variant?: 'classic' | 'barChart';
   fullHeight?: boolean;
+  highlightGroupId?: string;
+  highlightGroupName?: string;
 }
 
 /** Returns exact color config based on percentage rules: <50% Red, 50-74% Yellow, >=75% Bright Green */
@@ -47,6 +49,8 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
   competitors,
   variant = 'barChart',
   fullHeight = false,
+  highlightGroupId,
+  highlightGroupName,
 }) => {
   if (variant === 'barChart') {
     const displayCompetitors = competitors;
@@ -128,6 +132,11 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                 const displayPct = comp.displayPercentage || `${comp.percentage}%`;
                 const colorConfig = getBarColorConfig(comp.percentage);
 
+                const isMyGroup = Boolean(
+                  (highlightGroupId && (comp.id === highlightGroupId || comp.organizationId === highlightGroupId)) ||
+                  (highlightGroupName && (comp.name.toLowerCase().includes(highlightGroupName.toLowerCase()) || (comp.code && highlightGroupName.toLowerCase().includes(comp.code.toLowerCase()))))
+                );
+
                 const rankColor =
                   idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#94a3b8';
 
@@ -139,11 +148,30 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                       flexDirection: 'column',
                       alignItems: 'center',
                       height: '100%',
-                      justify: 'flex-end',
+                      justifyContent: 'flex-end',
                       gap: '8px',
+                      position: 'relative',
                     }}
                     title={`${comp.name} (${comp.code || 'No Code'}): ${comp.soulsWon.toLocaleString()} / ${comp.target > 0 ? comp.target.toLocaleString() : 'Not Set'} souls (${displayPct}) - ${colorConfig.tierName}`}
                   >
+                    {isMyGroup && (
+                      <span
+                        style={{
+                          background: '#FFD700',
+                          color: '#000000',
+                          fontSize: '0.58rem',
+                          fontWeight: '900',
+                          padding: '2px 4px',
+                          borderRadius: '4px',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 2px 8px rgba(255, 215, 0, 0.6)',
+                          marginBottom: '2px',
+                        }}
+                      >
+                        ⭐ MY GROUP
+                      </span>
+                    )}
+
                     {/* Vertical Bar Track Column */}
                     <div
                       style={{
@@ -151,14 +179,14 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                         maxWidth: fullHeight ? '34px' : '22px',
                         height: fullHeight ? 'calc(100vh - 440px)' : '180px',
                         minHeight: fullHeight ? '300px' : '180px',
-                        background: 'rgba(0, 0, 0, 0.45)',
+                        background: isMyGroup ? 'rgba(255, 215, 0, 0.15)' : 'rgba(0, 0, 0, 0.45)',
                         borderRadius: '6px 6px 0 0',
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'flex-end',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        border: isMyGroup ? '2px solid #FFD700' : '1px solid rgba(255, 255, 255, 0.12)',
                         overflow: 'hidden',
-                        boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
+                        boxShadow: isMyGroup ? '0 0 16px rgba(255, 215, 0, 0.6), inset 0 2px 6px rgba(0,0,0,0.8)' : 'inset 0 2px 6px rgba(0,0,0,0.8)',
                       }}
                     >
                       {/* Entire Bar Filled with Threshold Color */}
@@ -173,6 +201,7 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
                           borderTop: '2px solid #ffffff',
                         }}
                       />
+                    </div>
                     </div>
 
                     {/* ALL LABELS PLACED UNDER THE BAR */}

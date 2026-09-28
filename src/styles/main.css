@@ -3388,9 +3388,16 @@ select {
 
 .home-square-badges-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   width: 100%;
+}
+
+@media (max-width: 640px) {
+  .home-square-badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
 }
 
 .square-badge-card {
@@ -3427,6 +3434,19 @@ select {
 
 .badge-gold .badge-card-value {
   color: #FFD700;
+}
+
+.badge-emerald {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.15) 0%, rgba(13, 31, 24, 0.95) 100%);
+}
+
+.badge-emerald .badge-icon-wrapper {
+  color: #34d399;
+}
+
+.badge-emerald .badge-card-value {
+  color: #34d399;
 }
 
 .badge-green {
