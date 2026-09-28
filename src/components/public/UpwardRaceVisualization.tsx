@@ -51,32 +51,29 @@ export const UpwardRaceVisualization: React.FC<UpwardRaceVisualizationProps> = (
 
     return (
       <div className="race-container bar-chart-variant">
-        <div className="race-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-          <div className="race-title-group">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="race-header">
+          <div className="race-title-group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <BarChart2 size={20} className="text-green-accent" />
               <h3 className="race-title" style={{ color: '#ffffff', fontWeight: '900', margin: 0 }}>
                 GROUP PERFORMANCE BAR CHART
               </h3>
             </div>
-            <p className="race-subtitle" style={{ color: '#94a3b8', marginTop: '4px' }}>
-              Real-time vertical bar representation of Groups climbing toward their soul targets.
-            </p>
-          </div>
 
-          {/* Color Threshold Legend */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.74rem' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ff453a', fontWeight: '800' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff453a' }} /> &lt;50% Red
-            </span>
-            <span style={{ color: '#64748b' }}>|</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ffd60a', fontWeight: '800' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffd60a' }} /> 50-74% Yellow
-            </span>
-            <span style={{ color: '#64748b' }}>|</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#00ff87', fontWeight: '800' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ff87' }} /> 75%+ Green
-            </span>
+            {/* Color Threshold Legend Pill beside Heading */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 14px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.12)', fontSize: '0.74rem' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ff453a', fontWeight: '800' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff453a' }} /> &lt;50% Red
+              </span>
+              <span style={{ color: '#64748b' }}>|</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ffd60a', fontWeight: '800' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffd60a' }} /> 50-74% Yellow
+              </span>
+              <span style={{ color: '#64748b' }}>|</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#00ff87', fontWeight: '800' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ff87' }} /> 75%+ Green
+              </span>
+            </div>
           </div>
         </div>
 
