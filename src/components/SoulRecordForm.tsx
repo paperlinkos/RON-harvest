@@ -195,17 +195,13 @@ export const SoulRecordForm: React.FC<SoulRecordFormProps> = ({
           )}
         </div>
 
-        <div className="network-indicator-badge">
-          {isOnline ? (
-            <span className="net-status net-online">
-              <span className="dot-online">●</span> ONLINE
-            </span>
-          ) : (
+        {!isOnline && (
+          <div className="network-indicator-badge">
             <span className="net-status net-offline">
               <span className="dot-offline">○</span> OFFLINE — SAVING LOCALLY
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="record-form">

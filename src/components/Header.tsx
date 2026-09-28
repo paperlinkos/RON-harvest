@@ -21,12 +21,7 @@ export const Header: React.FC<HeaderProps> = ({ pendingCount, syncedCount, onMan
       </div>
 
       <div className="header-actions">
-        {isOnline ? (
-          <div className="status-badge status-online" title="Connected to network">
-            <Wifi size={14} className="icon-pulse" />
-            <span>ONLINE</span>
-          </div>
-        ) : (
+        {!isOnline && (
           <div className="status-badge status-offline" title="Offline mode active">
             <WifiOff size={14} />
             <span>OFFLINE — SAVING LOCALLY</span>

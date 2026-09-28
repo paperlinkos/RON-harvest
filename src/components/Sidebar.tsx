@@ -54,20 +54,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, onOpen
         </button>
       </div>
 
-      {/* Network / Online Pill */}
-      {!isCollapsed && (
+      {/* Network Status (Offline only) */}
+      {!isCollapsed && !isOnline && (
         <div className="sidebar-status-box">
-          {isOnline ? (
-            <div className="status-badge status-online">
-              <Wifi size={13} className="icon-pulse" />
-              <span>ONLINE</span>
-            </div>
-          ) : (
-            <div className="status-badge status-offline">
-              <WifiOff size={13} />
-              <span>OFFLINE</span>
-            </div>
-          )}
+          <div className="status-badge status-offline">
+            <WifiOff size={13} />
+            <span>OFFLINE</span>
+          </div>
         </div>
       )}
 
